@@ -77,6 +77,39 @@ img { max-width: 100%; }
 .page-title { font-size: 28px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.5px; }
 .page-sub { color: var(--text-dim); margin: 0 0 26px; font-size: 14px; }
 
+/* ---- riepilogo (stile TV Time) ---- */
+.summary-bar {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 26px;
+}
+.summary-card {
+  display: flex; align-items: center; gap: 12px;
+  background: linear-gradient(150deg, rgba(139,92,246,0.14), rgba(255,92,138,0.08) 70%, var(--panel));
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 15px 16px; min-width: 0;
+}
+.summary-card .s-ico {
+  font-size: 24px; flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+}
+.summary-card .s-body { min-width: 0; }
+.summary-card .s-num {
+  font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 24px; line-height: 1.1;
+  white-space: nowrap;
+}
+.summary-card .s-unit { font-size: 14px; font-weight: 600; color: var(--text-dim); }
+.summary-card .s-sub {
+  font-size: 11.5px; color: var(--text-dim); margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+@media (max-width: 860px) {
+  .summary-bar { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+  .summary-card { padding: 12px; gap: 10px; }
+  .summary-card .s-ico { width: 38px; height: 38px; font-size: 20px; }
+  .summary-card .s-num { font-size: 20px; }
+}
+
 /* ---- cards & grids ---- */
 .poster-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));

@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, computeProgress, setEpisodeWatched } from '../db';
 import { Empty, epCode, nav, toast } from '../components';
+import SummaryBar from '../SummaryBar';
 
 export default function WatchNext() {
   const data = useLiveQuery(async () => {
@@ -21,6 +22,7 @@ export default function WatchNext() {
   if (!data) return null;
   return (
     <>
+      <SummaryBar />
       <h1 className="page-title">Da guardare</h1>
       <p className="page-sub">Il prossimo episodio di ogni serie che stai seguendo.</p>
       {data.length === 0 ? (
