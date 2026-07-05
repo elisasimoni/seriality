@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "npm run build && cd dist && touch .nojekyll && git init -q && git checkout -qb gh-pages && git add -A && git commit -qm deploy && git push -qf https://github.com/elisasimoni/seriality.git gh-pages && cd .. && rm -rf dist/.git && echo '✅ deploy su https://elisasimoni.github.io/seriality/'"
   },
   "dependencies": {
     "dexie": "^4.0.11",
