@@ -34,6 +34,30 @@ export async function setEpisodeWatched(ep: Episode, watched: boolean) {
   await db.shows.update(ep.showId, { lastActivityAt: nowIso() });
 }
 
+/** Episodi precedenti a `ep` (stessa serie) già andati in onda ma non ancora visti. */
+export async function previousUnwatched(ep: Episode): Promise<Episode[]> {
+  const today = new Date().toISOString().slice(0, 10);
+  const eps = await db.episodes.where('showId').equals(ep.showId).toArray();
+  return eps
+    .filter((e) =>
+      !e.special && e.season > 0 && !e.watched
+      && e.airDate && e.airDate <= today
+      && (e.season < ep.season || (e.season === ep.season && e.number < ep.number)))
+    .sort((a, b) => a.season - b.season || a.number - b.number);
+}
+
+/** Segna come visti un blocco di episodi (usato per "anche i precedenti"). */
+export async function markWatchedBulk(eps: Episode[]) {
+  if (!eps.length) return;
+  await db.episodes.bulkPut(eps.map((e) => ({
+    ...e,
+    watched: 1,
+    watchedAt: e.watchedAt ?? nowIso(),
+    timesWatched: Math.max(1, e.timesWatched ?? 0),
+  })));
+  await db.shows.update(eps[0].showId, { lastActivityAt: nowIso() });
+}
+
 export async function setSeasonWatched(showId: number, season: number, watched: boolean) {
   const eps = await db.episodes.where('showId').equals(showId).toArray();
   const today = new Date().toISOString().slice(0, 10);

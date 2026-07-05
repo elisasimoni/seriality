@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Toaster, useRoute } from './components';
+import { ConfirmHost, Toaster, useRoute } from './components';
 import { enrichAll, onEnrichProgress, type EnrichProgress } from './tvmaze';
 import { enrichMovies, onMovieEnrichProgress, type MovieEnrichProgress } from './tmdb';
 import { db, nowIso } from './db';
@@ -113,6 +113,7 @@ export default function App() {
         ))}
       </nav>
       <Toaster />
+      <ConfirmHost />
     </div>
   );
 }

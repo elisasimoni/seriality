@@ -32,6 +32,45 @@ export function Toaster() {
 }
 export const toast = (msg: string) => toastFn?.(msg);
 
+interface ConfirmReq {
+  title: string;
+  body?: string;
+  yes: string;
+  no: string;
+  resolve: (v: boolean) => void;
+}
+let confirmFn: ((req: ConfirmReq) => void) | null = null;
+
+/** Dialog di conferma sì/no (promise-based). Ritorna true se l'utente conferma. */
+export function askConfirm(opts: { title: string; body?: string; yes?: string; no?: string }): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (!confirmFn) { resolve(false); return; }
+    confirmFn({ title: opts.title, body: opts.body, yes: opts.yes ?? 'Sì', no: opts.no ?? 'No', resolve });
+  });
+}
+
+export function ConfirmHost() {
+  const [req, setReq] = useState<ConfirmReq | null>(null);
+  useEffect(() => {
+    confirmFn = (r) => setReq(r);
+    return () => { confirmFn = null; };
+  }, []);
+  if (!req) return null;
+  const close = (v: boolean) => { req.resolve(v); setReq(null); };
+  return (
+    <div className="confirm-overlay" onClick={() => close(false)}>
+      <div className="confirm-box" onClick={(e) => e.stopPropagation()}>
+        <div className="confirm-title">{req.title}</div>
+        {req.body && <div className="confirm-body">{req.body}</div>}
+        <div className="confirm-actions">
+          <button className="btn" onClick={() => close(false)}>{req.no}</button>
+          <button className="btn primary" onClick={() => close(true)} autoFocus>{req.yes}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Poster({ src, name }: { src?: string; name: string }) {
   const [err, setErr] = useState(false);
   if (!src || err) return <div className="ph">{name}</div>;

@@ -311,6 +311,21 @@ input:focus { border-color: var(--accent); }
 .stars .s.on { opacity: 1; }
 .stars .s:hover { transform: scale(1.2); }
 
+.confirm-overlay {
+  position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center;
+  background: rgba(5, 6, 11, 0.6); backdrop-filter: blur(4px); padding: 24px;
+  animation: fadein 0.15s ease;
+}
+.confirm-box {
+  background: #14172200; background: linear-gradient(150deg, #191c2a, #14161f);
+  border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow);
+  padding: 22px 24px; max-width: 400px; width: 100%; animation: pop 0.2s ease;
+}
+.confirm-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 18px; }
+.confirm-body { color: var(--text-dim); font-size: 14px; margin-top: 8px; line-height: 1.5; }
+.confirm-actions { display: flex; gap: 10px; margin-top: 20px; }
+.confirm-actions .btn { flex: 1; justify-content: center; }
+
 .toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
   background: #1c1f2e; border: 1px solid var(--border); border-radius: 14px;

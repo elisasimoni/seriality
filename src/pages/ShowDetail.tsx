@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, computeProgress, nowIso, setEpisodeWatched, setSeasonWatched } from '../db';
-import { Stars, epCode, fmtDate, nav, toast } from '../components';
+import {
+  db, computeProgress, markWatchedBulk, nowIso, previousUnwatched,
+  setEpisodeWatched, setSeasonWatched,
+} from '../db';
+import { Stars, askConfirm, epCode, fmtDate, nav, toast } from '../components';
+import type { Episode } from '../types';
 import { enrichShow, tvmazeEpisode } from '../tvmaze';
 import {
   findTvByTvdb, hasTmdb, posterUrl, searchTv, trailerUrl, tvCredits,
@@ -86,6 +90,28 @@ export default function ShowDetail({ id }: { id: number }) {
   const seasons = [...new Set(eps.map((e) => e.season))].sort((a, b) => (a || 99) - (b || 99));
   const bySeason = (s: number) => eps.filter((e) => e.season === s).sort((a, b) => a.number - b.number);
   const today = new Date().toISOString().slice(0, 10);
+
+  // segna un episodio come visto; se ci sono precedenti non visti chiede
+  // se marcare anche quelli (come faceva TV Time)
+  const watchEpisode = async (e: Episode) => {
+    if (e.watched) { await setEpisodeWatched(e, false); return; }
+    await setEpisodeWatched(e, true);
+    const prev = await previousUnwatched(e);
+    if (prev.length === 0) {
+      toast(`✓ ${epCode(e.season, e.number)} visto!`);
+      return;
+    }
+    const ok = await askConfirm({
+      title: `Segnare anche i ${prev.length} episodi precedenti?`,
+      body: `Non hai ancora visto ${prev.length} episodi prima di ${epCode(e.season, e.number)}. Vuoi segnarli tutti come visti?`,
+      yes: `Sì, segna tutti (${prev.length + 1})`,
+      no: 'Solo questo',
+    });
+    if (ok) {
+      await markWatchedBulk(prev);
+      toast(`✓ ${prev.length + 1} episodi segnati come visti!`);
+    }
+  };
 
   // click su un episodio → apre/chiude la sinossi (scaricata al primo click)
   const toggleEpisode = async (epKey: string) => {
@@ -245,7 +271,7 @@ export default function ShowDetail({ id }: { id: number }) {
                     <span className="date">{e.watched ? fmtDate(e.watchedAt) : (e.airDate ? fmtDate(e.airDate) : '')}</span>
                     <button
                       className={`check-btn small ${e.watched ? '' : 'off'}`}
-                      onClick={(ev) => { ev.stopPropagation(); void setEpisodeWatched(e, !e.watched); }}
+                      onClick={(ev) => { ev.stopPropagation(); void watchEpisode(e); }}
                       disabled={!!future && !e.watched}
                       title={e.watched ? 'Segna come non visto' : 'Segna come visto'}
                     >✓</button>
