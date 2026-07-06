@@ -30,9 +30,9 @@ const NAV: NavDef[] = [
   { to: '/shows', icon: 'shows', label: 'Serie', full: 'Le mie serie' },
   { to: '/movies', icon: 'movies', label: 'Film', full: 'Film' },
   { to: '/discover', icon: 'plus', label: 'Scopri', full: 'Scopri' },
-  { to: '/stats', ico: '📊', label: 'Stats', full: 'Statistiche' },
-  { to: '/import', ico: '📤', label: 'Importa', full: 'Importa' },
-  { to: '/settings', ico: '⚙️', label: 'Opzioni', full: 'Impostazioni' },
+  { to: '/stats', icon: 'stats', label: 'Stats', full: 'Statistiche' },
+  { to: '/import', icon: 'import', label: 'Importa', full: 'Importa' },
+  { to: '/settings', icon: 'settings', label: 'Opzioni', full: 'Impostazioni' },
 ];
 
 // Bottom bar: ordine con Scopri (+) al centro come pulsante d'azione
@@ -92,10 +92,11 @@ export default function App() {
         <a className="brand" href="#/">Seriality<small>il tuo tracker, per sempre</small></a>
         {NAV.map((n) => {
           const Ico = n.icon ? NAV_ICONS[n.icon] : null;
+          const inBottom = BOTTOM_ORDER.includes(n.to);
           return (
             <a
               key={n.to} href={`#${n.to}`}
-              className={`nav-item ${n.icon ? 'in-bottom' : ''} ${isActive(route, n.to) ? 'active' : ''}`}
+              className={`nav-item ${inBottom ? 'in-bottom' : ''} ${isActive(route, n.to) ? 'active' : ''}`}
             >
               <span className="ico">{Ico ? <Ico size={20} /> : n.ico}</span>
               <span className="txt">{n.full}</span>

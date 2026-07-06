@@ -53,10 +53,42 @@ export const IconMovies = ({ size = 24, className }: IconProps) => (
   </svg>
 );
 
+/** Statistiche: grafico a barre. */
+export const IconStats = ({ size = 24, className }: IconProps) => (
+  <svg {...base(size, className)}>
+    <path d="M3.5 20.3h17" />
+    <path d="M6.5 20v-5M12 20V8M17.5 20v-8" strokeWidth="2.4" />
+  </svg>
+);
+
+/** Importa: freccia in una vaschetta (carica i dati). */
+export const IconImport = ({ size = 24, className }: IconProps) => (
+  <svg {...base(size, className)}>
+    <path d="M12 3.5v9.5" />
+    <path d="M8 9.5l4 4 4-4" />
+    <path d="M4.5 15v2.5a2 2 0 002 2h11a2 2 0 002-2V15" />
+  </svg>
+);
+
+/** Impostazioni: cursori/regolazioni. */
+export const IconSettings = ({ size = 24, className }: IconProps) => (
+  <svg {...base(size, className)}>
+    <path d="M4 7h9M17 7h3" />
+    <circle cx="15" cy="7" r="2.1" fill="var(--bg)" />
+    <path d="M4 12h3M11 12h9" />
+    <circle cx="9" cy="12" r="2.1" fill="var(--bg)" />
+    <path d="M4 17h9M17 17h3" />
+    <circle cx="15" cy="17" r="2.1" fill="var(--bg)" />
+  </svg>
+);
+
 export const NAV_ICONS: Record<string, (p: IconProps) => JSX.Element> = {
   watch: IconWatch,
   upcoming: IconUpcoming,
   plus: IconPlus,
   shows: IconShows,
   movies: IconMovies,
+  stats: IconStats,
+  import: IconImport,
+  settings: IconSettings,
 };
