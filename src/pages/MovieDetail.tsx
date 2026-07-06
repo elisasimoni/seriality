@@ -22,10 +22,12 @@ export default function MovieDetail({ movieKey }: { movieKey: string }) {
   const movie = useLiveQuery(() => db.movies.get(movieKey), [movieKey]);
   const [extras, setExtras] = useState<Extras | null>(null);
 
-  // film precedente/successivo (ordine alfabetico) per swipe/frecce
+  // film precedente/successivo in ordine di visione (ultimo visto prima) per swipe/frecce
   const adj = useLiveQuery(async () => {
     const movies = await db.movies.toArray();
-    movies.sort((a, b) => a.name.localeCompare(b.name, 'it'));
+    movies.sort((a, b) =>
+      (b.watchedAt ?? '').localeCompare(a.watchedAt ?? '')
+      || a.name.localeCompare(b.name, 'it'));
     const i = movies.findIndex((m) => m.key === movieKey);
     const href = (m?: { key: string }) => (m ? `/movie/${encodeURIComponent(m.key)}` : undefined);
     return {

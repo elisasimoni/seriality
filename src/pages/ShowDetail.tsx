@@ -47,10 +47,12 @@ export default function ShowDetail({ id }: { id: number }) {
     return { show, eps, prog: computeProgress(show, eps) };
   }, [id]);
 
-  // serie precedente/successiva (ordine alfabetico della libreria) per swipe/frecce
+  // serie precedente/successiva in ordine di visione (ultima vista prima) per swipe/frecce
   const adj = useLiveQuery(async () => {
     const shows = await db.shows.toArray();
-    shows.sort((a, b) => a.name.localeCompare(b.name, 'it'));
+    shows.sort((a, b) =>
+      (b.lastActivityAt ?? '').localeCompare(a.lastActivityAt ?? '')
+      || a.name.localeCompare(b.name, 'it'));
     const i = shows.findIndex((s) => s.id === id);
     return {
       prev: i > 0 ? `/show/${shows[i - 1].id}` : undefined,
