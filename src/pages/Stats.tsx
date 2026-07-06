@@ -1,6 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, computeProgress, minutesOf } from '../db';
 import { Empty, fmtMinutes } from '../components';
+import Heatmap from '../Heatmap';
+
+const WEEKDAYS = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
 
 export default function Stats() {
   const data = useLiveQuery(async () => {
@@ -65,6 +68,39 @@ export default function Stats() {
   const years = [...byYear.entries()].sort((a, b) => a[0].localeCompare(b[0])).slice(-8);
   const maxYear = Math.max(1, ...years.map(([, n]) => n));
 
+  // ---- heatmap + statistiche divertenti (per giorno di visione) ----
+  const dayCounts = new Map<string, number>();
+  const addDay = (iso?: string) => {
+    if (!iso) return;
+    const d = iso.slice(0, 10);
+    if (d > '2000') dayCounts.set(d, (dayCounts.get(d) ?? 0) + 1);
+  };
+  for (const e of watchedEps) addDay(e.watchedAt);
+  for (const m of moviesWatched) addDay(m.watchedAt);
+
+  const heatYears = [...new Set([...dayCounts.keys()].map((d) => Number(d.slice(0, 4))))].sort((a, b) => a - b);
+
+  // giorno record
+  let recordDay = ''; let recordN = 0;
+  for (const [d, n] of dayCounts) if (n > recordN) { recordN = n; recordDay = d; }
+
+  // giorno della settimana preferito
+  const weekdayCount = new Array(7).fill(0);
+  for (const [d, n] of dayCounts) weekdayCount[(new Date(d).getUTCDay() + 6) % 7] += n;
+  const favWeekday = weekdayCount.indexOf(Math.max(...weekdayCount));
+
+  // streak più lungo (giorni consecutivi con almeno una visione)
+  const sortedDays = [...dayCounts.keys()].sort();
+  let longest = sortedDays.length ? 1 : 0; let cur = sortedDays.length ? 1 : 0;
+  for (let i = 1; i < sortedDays.length; i++) {
+    const diff = (Date.parse(sortedDays[i]) - Date.parse(sortedDays[i - 1])) / 86400000;
+    cur = diff === 1 ? cur + 1 : 1;
+    if (cur > longest) longest = cur;
+  }
+  const fmtRecord = recordDay
+    ? new Date(recordDay).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' })
+    : '—';
+
   return (
     <>
       <h1 className="page-title">Statistiche</h1>
@@ -76,6 +112,18 @@ export default function Stats() {
         <div className="stat-card"><div className="n">{finished}</div><div className="l">serie completate</div></div>
         <div className="stat-card"><div className="n">{moviesWatched.length}</div><div className="l">film visti</div></div>
       </div>
+
+      {heatYears.length > 0 && (
+        <>
+          <h2 className="section-title">📅 Il tuo calendario di visioni</h2>
+          <Heatmap counts={dayCounts} years={heatYears} />
+          <div className="stats-hero" style={{ marginTop: 18 }}>
+            <div className="stat-card"><div className="n">{longest}</div><div className="l">giorni di fila 🔥</div></div>
+            <div className="stat-card"><div className="n" style={{ fontSize: 22 }}>{WEEKDAYS[favWeekday]}</div><div className="l">il tuo giorno preferito</div></div>
+            <div className="stat-card"><div className="n">{recordN}</div><div className="l">record in un giorno<br /><span style={{ fontSize: 11 }}>({fmtRecord})</span></div></div>
+          </div>
+        </>
+      )}
 
       {topShows.length > 0 && (
         <>
