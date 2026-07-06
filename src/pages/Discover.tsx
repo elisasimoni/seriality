@@ -5,6 +5,8 @@ import { Empty, Poster, nav, toast } from '../components';
 import { searchShows, tmShowToLocal, enrichShow } from '../tvmaze';
 import { findTvByTvdb, hasTmdb, searchMovies, posterUrl, tvExternalIds } from '../tmdb';
 import { getRecommendations, type Rec, type RecSection } from '../recommend';
+import AiPanel from '../AiPanel';
+import { hasGemini } from '../ai';
 
 interface ShowResult {
   id: number; name: string; poster?: string; premiered?: string;
@@ -15,7 +17,7 @@ interface MovieResult {
 }
 
 export default function Discover() {
-  const [kind, setKind] = useState<'series' | 'movie'>('series');
+  const [kind, setKind] = useState<'ai' | 'series' | 'movie'>(hasGemini() ? 'ai' : 'series');
   const [q, setQ] = useState('');
   const [shows, setShows] = useState<ShowResult[] | null>(null);
   const [movies, setMovies] = useState<MovieResult[] | null>(null);
@@ -125,12 +127,16 @@ export default function Discover() {
   return (
     <>
       <h1 className="page-title">Scopri</h1>
-      <p className="page-sub">Cerca serie (TVmaze) e film (TMDB, chiave riusata da TvChoicer).</p>
+      <p className="page-sub">Consigli AI, oppure cerca serie e film per nome.</p>
       <div className="chip-row">
+        <button className={`chip ${kind === 'ai' ? 'active' : ''}`} onClick={() => setKind('ai')}>🤖 AI</button>
         <button className={`chip ${kind === 'series' ? 'active' : ''}`} onClick={() => setKind('series')}>📺 Serie</button>
         <button className={`chip ${kind === 'movie' ? 'active' : ''}`} onClick={() => setKind('movie')}>🍿 Film</button>
       </div>
-      <div className="search-bar">
+
+      {kind === 'ai' && <AiPanel />}
+
+      {kind !== 'ai' && <div className="search-bar">
         <input
           type="search" placeholder={kind === 'series' ? 'Cerca una serie… (es. Severance)' : 'Cerca un film… (es. Parasite)'}
           value={q} onChange={(e) => setQ(e.target.value)}
@@ -140,7 +146,7 @@ export default function Discover() {
         <button className="btn primary" disabled={busy} onClick={() => void search()}>
           {busy ? '…' : '🔍 Cerca'}
         </button>
-      </div>
+      </div>}
 
       {kind === 'movie' && !hasTmdb() && (
         <Empty icon="🔑" title="Chiave TMDB mancante">
@@ -149,7 +155,7 @@ export default function Discover() {
       )}
 
       {/* ✨ Consigliati per te — visibili quando non c'è una ricerca attiva */}
-      {(kind === 'series' ? shows === null : movies === null) && hasTmdb() && (
+      {kind !== 'ai' && (kind === 'series' ? shows === null : movies === null) && hasTmdb() && (
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 6 }}>
             <h2 className="section-title" style={{ margin: 0 }}>✨ Consigliati per te</h2>

@@ -224,6 +224,37 @@ export async function searchTv(query: string): Promise<TmdbTv[]> {
   } catch { return []; }
 }
 
+// ---- per i consigli AI (porting da TvChoicer): generi TV, discover, ricerca ----
+
+export interface RawTv {
+  id: number; name?: string; original_name?: string; overview?: string;
+  first_air_date?: string; vote_average?: number; vote_count?: number;
+  genre_ids?: number[]; origin_country?: string[]; popularity?: number;
+  poster_path?: string | null;
+}
+
+let _tvGenres: Map<number, string> | null = null;
+export async function tvGenreMap(): Promise<Map<number, string>> {
+  if (_tvGenres) return _tvGenres;
+  const data = (await tmdb('/genre/tv/list')) as { genres?: { id: number; name: string }[] };
+  _tvGenres = new Map((data.genres ?? []).map((g) => [g.id, g.name]));
+  return _tvGenres;
+}
+
+export async function discoverTvRaw(params: Record<string, string>): Promise<RawTv[]> {
+  try {
+    const data = (await tmdb('/discover/tv', params)) as { results?: RawTv[] };
+    return data.results ?? [];
+  } catch { return []; }
+}
+
+export async function searchTvRaw(query: string): Promise<RawTv[]> {
+  try {
+    const data = (await tmdb('/search/tv', { query, include_adult: 'false' })) as { results?: RawTv[] };
+    return data.results ?? [];
+  } catch { return []; }
+}
+
 export async function movieDetailsById(id: number): Promise<TmdbMovie | null> {
   return movieDetails(id);
 }

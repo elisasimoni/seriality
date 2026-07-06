@@ -286,6 +286,24 @@ img { max-width: 100%; }
 }
 .rec-row .poster-card:hover { transform: translateY(-3px); }
 
+/* ---- consigli AI ---- */
+.ai-list { display: flex; flex-direction: column; gap: 14px; }
+.ai-card {
+  display: flex; gap: 14px; padding: 12px; border-radius: var(--radius);
+  background: var(--panel); border: 1px solid var(--border); cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.ai-card:hover { transform: translateY(-2px); background: var(--panel-strong); box-shadow: var(--shadow); }
+.ai-poster { width: 74px; flex-shrink: 0; border-radius: 10px; overflow: hidden; }
+.ai-poster .img, .ai-poster .ph { border-radius: 10px; }
+.ai-poster .ph { font-size: 12px; padding: 8px; }
+.ai-body { min-width: 0; flex: 1; }
+.ai-head { display: flex; align-items: baseline; gap: 10px; }
+.ai-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 16px; flex: 1; min-width: 0; }
+.ai-score { font-weight: 800; font-family: 'Outfit', sans-serif; font-size: 15px; flex-shrink: 0; }
+.ai-meta { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.ai-reason { font-size: 13.5px; color: var(--text); margin: 8px 0 0; line-height: 1.5; }
+
 /* ---- cast & provider ---- */
 .cast-row { grid-auto-columns: 118px; }
 .person-card {
