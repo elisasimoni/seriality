@@ -337,7 +337,16 @@ img { max-width: 100%; }
 .provider img { width: 24px; height: 24px; border-radius: 7px; }
 
 /* ---- search / inputs ---- */
-.search-bar { display: flex; gap: 10px; margin-bottom: 24px; }
+.search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+
+/* filtri libreria */
+.lib-filters { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+.lib-filters label { display: flex; flex-direction: column; gap: 4px; font-size: 11.5px; color: var(--text-dim); flex: 1; min-width: 150px; }
+.lib-filters select {
+  background: var(--panel); border: 1px solid var(--border); color: var(--text);
+  padding: 9px 12px; border-radius: 12px; font-size: 14px; font-family: inherit; outline: none;
+}
+.lib-filters select:focus { border-color: var(--accent); }
 input[type="text"], input[type="password"], input[type="search"] {
   background: var(--panel); border: 1px solid var(--border); color: var(--text);
   padding: 11px 16px; border-radius: 12px; font-size: 14.5px; font-family: inherit;
