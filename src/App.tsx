@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ConfirmHost, Toaster, useRoute } from './components';
+import { ConfirmHost, Toaster, useRoute, useScrollRestoration } from './components';
 import { enrichAll, onEnrichProgress, type EnrichProgress } from './tvmaze';
 import { enrichMovies, onMovieEnrichProgress, type MovieEnrichProgress } from './tmdb';
 import { db, nowIso } from './db';
@@ -42,6 +42,7 @@ const isActive = (route: string, to: string) => route === to || (to === '/' && r
 
 export default function App() {
   const route = useRoute();
+  useScrollRestoration(route);
   const [locked, setLocked] = useState(lockActive());
   const [enrich, setEnrich] = useState<EnrichProgress>({ done: 0, total: 0, running: false });
   const [mEnrich, setMEnrich] = useState<MovieEnrichProgress>({ done: 0, total: 0, running: false });

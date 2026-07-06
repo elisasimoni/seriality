@@ -6,6 +6,9 @@ import { parseFiles, applyImport } from './ingest';
 import { enrichAll } from './tvmaze';
 import { db } from './db';
 
+// Gestiamo noi lo scroll (vedi useScrollRestoration): niente ripristino del browser
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />

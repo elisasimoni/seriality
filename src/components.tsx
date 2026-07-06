@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Show } from './types';
 import type { ShowProgress } from './db';
 
@@ -14,6 +14,43 @@ export function useRoute(): string {
     return () => window.removeEventListener('hashchange', f);
   }, []);
   return h;
+}
+
+/**
+ * Ripristina la posizione di scroll per ogni route (per rotta = per pagina/dettaglio).
+ * Aprendo un titolo e tornando indietro la lista resta dov'era, invece di risalire.
+ * Riprova per qualche frame perché le liste caricano i dati in modo asincrono
+ * (la pagina cresce dopo il primo render) e senza retry lo scrollTo verrebbe ignorato.
+ */
+export function useScrollRestoration(route: string) {
+  const positions = useRef<Record<string, number>>({});
+  const restoring = useRef(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (!restoring.current) positions.current[route] = window.scrollY;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [route]);
+
+  useLayoutEffect(() => {
+    const target = positions.current[route] ?? 0;
+    restoring.current = true;
+    let raf = 0;
+    let tries = 0;
+    const step = () => {
+      window.scrollTo(0, target);
+      tries += 1;
+      if (Math.abs(window.scrollY - target) > 2 && tries < 45) {
+        raf = requestAnimationFrame(step);
+      } else {
+        restoring.current = false;
+      }
+    };
+    step();
+    return () => { cancelAnimationFrame(raf); restoring.current = false; };
+  }, [route]);
 }
 
 let toastFn: ((msg: string) => void) | null = null;
