@@ -4,7 +4,7 @@ import {
   db, computeProgress, markWatchedBulk, nowIso, previousUnwatched,
   setEpisodeWatched, setSeasonWatched,
 } from '../db';
-import { Stars, askConfirm, epCode, fmtDate, nav, toast } from '../components';
+import { AdjacentNav, Stars, askConfirm, epCode, fmtDate, nav, toast } from '../components';
 import type { Episode } from '../types';
 import { enrichShow, tvmazeEpisode } from '../tvmaze';
 import {
@@ -45,6 +45,17 @@ export default function ShowDetail({ id }: { id: number }) {
     if (!show) return null;
     const eps = await db.episodes.where('showId').equals(id).toArray();
     return { show, eps, prog: computeProgress(show, eps) };
+  }, [id]);
+
+  // serie precedente/successiva (ordine alfabetico della libreria) per swipe/frecce
+  const adj = useLiveQuery(async () => {
+    const shows = await db.shows.toArray();
+    shows.sort((a, b) => a.name.localeCompare(b.name, 'it'));
+    const i = shows.findIndex((s) => s.id === id);
+    return {
+      prev: i > 0 ? `/show/${shows[i - 1].id}` : undefined,
+      next: i >= 0 && i < shows.length - 1 ? `/show/${shows[i + 1].id}` : undefined,
+    };
   }, [id]);
 
   // cast/trailer/streaming/simili via TMDB (id risolto dal TVDB id e salvato)
@@ -156,6 +167,7 @@ export default function ShowDetail({ id }: { id: number }) {
 
   return (
     <>
+      <AdjacentNav prevHref={adj?.prev} nextHref={adj?.next} />
       <div className="hero" style={{ backgroundImage: `url(${show.fanart || ''})`, backgroundColor: 'var(--bg-soft)' }}>
         <div className="shade" />
         <div className="inner">

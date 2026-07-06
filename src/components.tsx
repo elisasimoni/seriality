@@ -53,6 +53,60 @@ export function useScrollRestoration(route: string) {
   }, [route]);
 }
 
+/**
+ * Naviga tra schede adiacenti (serie o film): swipe orizzontale su touch,
+ * frecce ‹ › ai bordi (anche da desktop/click) e tasti freccia della tastiera.
+ * Lo swipe ignora i caroselli orizzontali (cast, simili) e i controlli.
+ */
+export function AdjacentNav({ prevHref, nextHref }: { prevHref?: string; nextHref?: string }) {
+  useEffect(() => {
+    let x0 = 0;
+    let y0 = 0;
+    let active = false;
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) { active = false; return; }
+      const t = e.target as HTMLElement;
+      // non intercettare swipe su caroselli orizzontali o controlli
+      if (t?.closest?.('.rec-row, .stars, input, textarea, .confirm-box')) { active = false; return; }
+      x0 = e.touches[0].clientX;
+      y0 = e.touches[0].clientY;
+      active = true;
+    };
+    const onEnd = (e: TouchEvent) => {
+      if (!active) return;
+      active = false;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - x0;
+      const dy = t.clientY - y0;
+      if (Math.abs(dx) > 90 && Math.abs(dx) > Math.abs(dy) * 2) {
+        const href = dx < 0 ? nextHref : prevHref;
+        if (href) location.hash = href;
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement;
+      if (el?.closest?.('input, textarea')) return;
+      if (e.key === 'ArrowRight' && nextHref) location.hash = nextHref;
+      if (e.key === 'ArrowLeft' && prevHref) location.hash = prevHref;
+    };
+    window.addEventListener('touchstart', onStart, { passive: true });
+    window.addEventListener('touchend', onEnd, { passive: true });
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('touchstart', onStart);
+      window.removeEventListener('touchend', onEnd);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [prevHref, nextHref]);
+
+  return (
+    <>
+      {prevHref && <a className="edge-nav left" href={`#${prevHref}`} aria-label="Precedente">‹</a>}
+      {nextHref && <a className="edge-nav right" href={`#${nextHref}`} aria-label="Successivo">›</a>}
+    </>
+  );
+}
+
 let toastFn: ((msg: string) => void) | null = null;
 export function Toaster() {
   const [msg, setMsg] = useState<string | null>(null);

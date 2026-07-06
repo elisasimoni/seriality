@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, nowIso } from '../db';
-import { Stars, fmtDate, nav, toast } from '../components';
+import { AdjacentNav, Stars, fmtDate, nav, toast } from '../components';
 import {
   hasTmdb, movieCredits, movieDetailsById, movieRecommendations, posterUrl,
   searchMovies, trailerUrl, watchProviders,
@@ -21,6 +21,18 @@ interface Extras {
 export default function MovieDetail({ movieKey }: { movieKey: string }) {
   const movie = useLiveQuery(() => db.movies.get(movieKey), [movieKey]);
   const [extras, setExtras] = useState<Extras | null>(null);
+
+  // film precedente/successivo (ordine alfabetico) per swipe/frecce
+  const adj = useLiveQuery(async () => {
+    const movies = await db.movies.toArray();
+    movies.sort((a, b) => a.name.localeCompare(b.name, 'it'));
+    const i = movies.findIndex((m) => m.key === movieKey);
+    const href = (m?: { key: string }) => (m ? `/movie/${encodeURIComponent(m.key)}` : undefined);
+    return {
+      prev: i > 0 ? href(movies[i - 1]) : undefined,
+      next: i >= 0 && i < movies.length - 1 ? href(movies[i + 1]) : undefined,
+    };
+  }, [movieKey]);
 
   useEffect(() => {
     setExtras(null);
@@ -87,6 +99,7 @@ export default function MovieDetail({ movieKey }: { movieKey: string }) {
 
   return (
     <>
+      <AdjacentNav prevHref={adj?.prev} nextHref={adj?.next} />
       <div className="hero" style={{ backgroundImage: `url(${movie.fanart || ''})`, backgroundColor: 'var(--bg-soft)' }}>
         <div className="shade" />
         <div className="inner">
