@@ -14,7 +14,7 @@ const TABS: { key: ShowProgress['status'] | 'all' | 'favorites'; label: string }
 ];
 
 export default function Library() {
-  const [tab, setTab] = useState<string>('all');
+  const [tab, setTab] = useState<string>('watching');
   const [q, setQ] = useState('');
 
   const data = useLiveQuery(async () => {
@@ -27,7 +27,10 @@ export default function Library() {
     }
     return shows
       .map((s) => ({ show: s, prog: computeProgress(s, byShow.get(s.id) ?? []) }))
-      .sort((a, b) => a.show.name.localeCompare(b.show.name));
+      // ordine di visione: ultima vista prima; quelle mai iniziate in fondo per nome
+      .sort((a, b) =>
+        (b.show.lastActivityAt ?? '').localeCompare(a.show.lastActivityAt ?? '')
+        || a.show.name.localeCompare(b.show.name, 'it'));
   });
 
   if (!data) return null;
