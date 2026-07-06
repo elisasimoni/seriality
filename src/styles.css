@@ -63,7 +63,8 @@ img { max-width: 100%; }
   color: var(--text); background: var(--panel-strong);
   border-color: var(--border);
 }
-.nav-item .ico { font-size: 17px; width: 22px; text-align: center; }
+.nav-item .ico { font-size: 17px; width: 22px; text-align: center; display: inline-flex; align-items: center; justify-content: center; color: var(--text-dim); }
+.nav-item:hover .ico, .nav-item.active .ico { color: var(--accent); }
 .nav-spacer { flex: 1; }
 .enrich-pill {
   margin: 8px 4px 0; padding: 10px 12px; border-radius: 12px;
@@ -364,16 +365,32 @@ input:focus { border-color: var(--accent); }
     display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
     background: rgba(13, 15, 24, 0.92); backdrop-filter: blur(16px);
     border-top: 1px solid var(--border);
-    padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    padding: 8px 4px calc(8px + env(safe-area-inset-bottom, 0px));
   }
   .bn-item {
-    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
-    padding: 4px 0; border-radius: 12px; color: var(--text-dim); font-size: 10.5px; font-weight: 600;
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 2px 0; border-radius: 12px; color: var(--text-dim);
+    font-size: 10.5px; font-weight: 600;
   }
-  .bn-item .bn-ico { font-size: 20px; line-height: 1.1; filter: grayscale(0.6) opacity(0.75); transition: filter 0.15s; }
+  .bn-ico { color: var(--text-dim); transition: color 0.15s, transform 0.15s; display: flex; }
   .bn-item.active { color: var(--text); }
-  .bn-item.active .bn-ico { filter: none; }
+  .bn-item.active .bn-ico { color: var(--accent); transform: translateY(-1px); }
   .bn-item.active .bn-txt {
+    background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
+  /* pulsante centrale "+" (Scopri) sollevato */
+  .bn-fab-item { position: relative; }
+  .bn-fab {
+    display: flex; align-items: center; justify-content: center;
+    width: 52px; height: 52px; margin-top: -22px; margin-bottom: 1px;
+    border-radius: 50%; color: #fff; background: var(--grad);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.55); border: 3px solid var(--bg);
+    transition: transform 0.15s;
+  }
+  .bn-fab-item:active .bn-fab { transform: scale(0.92); }
+  .bn-fab-item.active .bn-fab { box-shadow: 0 6px 26px rgba(255, 92, 138, 0.7); }
+  .bn-fab-item.active .bn-txt {
     background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent;
   }
 

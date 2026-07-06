@@ -16,17 +16,29 @@ import Stats from './pages/Stats';
 import ImportPage from './pages/ImportPage';
 import Discover from './pages/Discover';
 import Settings from './pages/Settings';
+import { NAV_ICONS } from './icons';
 
-const NAV = [
-  { to: '/', ico: '▶️', label: 'Guarda', full: 'Da guardare', bottom: true },
-  { to: '/upcoming', ico: '📅', label: 'In arrivo', full: 'In arrivo', bottom: true },
-  { to: '/shows', ico: '📺', label: 'Serie', full: 'Le mie serie', bottom: true },
-  { to: '/movies', ico: '🍿', label: 'Film', full: 'Film', bottom: true },
-  { to: '/discover', ico: '🔭', label: 'Scopri', full: 'Scopri', bottom: true },
-  { to: '/stats', ico: '📊', label: 'Stats', full: 'Statistiche', bottom: false },
-  { to: '/import', ico: '📤', label: 'Importa', full: 'Importa', bottom: false },
-  { to: '/settings', ico: '⚙️', label: 'Opzioni', full: 'Impostazioni', bottom: false },
+interface NavDef {
+  to: string; ico?: string; icon?: keyof typeof NAV_ICONS;
+  label: string; full: string;
+}
+
+// Icone principali (sidebar + bottom bar)
+const NAV: NavDef[] = [
+  { to: '/', icon: 'watch', label: 'Guarda', full: 'Da guardare' },
+  { to: '/upcoming', icon: 'upcoming', label: 'In arrivo', full: 'In arrivo' },
+  { to: '/shows', icon: 'shows', label: 'Serie', full: 'Le mie serie' },
+  { to: '/movies', icon: 'movies', label: 'Film', full: 'Film' },
+  { to: '/discover', icon: 'plus', label: 'Scopri', full: 'Scopri' },
+  { to: '/stats', ico: '📊', label: 'Stats', full: 'Statistiche' },
+  { to: '/import', ico: '📤', label: 'Importa', full: 'Importa' },
+  { to: '/settings', ico: '⚙️', label: 'Opzioni', full: 'Impostazioni' },
 ];
+
+// Bottom bar: ordine con Scopri (+) al centro come pulsante d'azione
+const BOTTOM_ORDER = ['/', '/upcoming', '/discover', '/shows', '/movies'];
+const BOTTOM: NavDef[] = BOTTOM_ORDER.map((to) => NAV.find((n) => n.to === to)!);
+const isActive = (route: string, to: string) => route === to || (to === '/' && route === '');
 
 export default function App() {
   const route = useRoute();
@@ -77,14 +89,18 @@ export default function App() {
     <div className="app">
       <aside className="sidebar">
         <a className="brand" href="#/">Seriality<small>il tuo tracker, per sempre</small></a>
-        {NAV.map((n) => (
-          <a
-            key={n.to} href={`#${n.to}`}
-            className={`nav-item ${n.bottom ? 'in-bottom' : ''} ${route === n.to || (n.to === '/' && route === '') ? 'active' : ''}`}
-          >
-            <span className="ico">{n.ico}</span><span className="txt">{n.full}</span>
-          </a>
-        ))}
+        {NAV.map((n) => {
+          const Ico = n.icon ? NAV_ICONS[n.icon] : null;
+          return (
+            <a
+              key={n.to} href={`#${n.to}`}
+              className={`nav-item ${n.icon ? 'in-bottom' : ''} ${isActive(route, n.to) ? 'active' : ''}`}
+            >
+              <span className="ico">{Ico ? <Ico size={20} /> : n.ico}</span>
+              <span className="txt">{n.full}</span>
+            </a>
+          );
+        })}
         <div className="nav-spacer" />
         {enrich.running && (
           <div className="enrich-pill">
@@ -102,15 +118,24 @@ export default function App() {
       </aside>
       <main className="main">{page}</main>
       <nav className="bottom-nav">
-        {NAV.filter((n) => n.bottom).map((n) => (
-          <a
-            key={n.to} href={`#${n.to}`}
-            className={`bn-item ${route === n.to || (n.to === '/' && route === '') ? 'active' : ''}`}
-          >
-            <span className="bn-ico">{n.ico}</span>
-            <span className="bn-txt">{n.label}</span>
-          </a>
-        ))}
+        {BOTTOM.map((n) => {
+          const Ico = NAV_ICONS[n.icon!];
+          const fab = n.to === '/discover';
+          return (
+            <a
+              key={n.to} href={`#${n.to}`}
+              className={`bn-item ${fab ? 'bn-fab-item' : ''} ${isActive(route, n.to) ? 'active' : ''}`}
+              aria-label={n.full}
+            >
+              {fab ? (
+                <span className="bn-fab"><Ico size={26} /></span>
+              ) : (
+                <span className="bn-ico"><Ico size={23} /></span>
+              )}
+              <span className="bn-txt">{n.label}</span>
+            </a>
+          );
+        })}
       </nav>
       <Toaster />
       <ConfirmHost />
