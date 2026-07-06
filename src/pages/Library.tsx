@@ -14,7 +14,7 @@ const TABS: { key: ShowProgress['status'] | 'all' | 'favorites'; label: string }
 ];
 
 export default function Library() {
-  const [tab, setTab] = useState<string>('watching');
+  const [tab, setTab] = useState<string>('all');
   const [q, setQ] = useState('');
 
   const data = useLiveQuery(async () => {
