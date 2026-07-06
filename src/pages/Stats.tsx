@@ -131,7 +131,8 @@ export default function Stats() {
           {topShows.map(([id, min]) => (
             <div className="bar-row" key={id}>
               <span className="lbl">{showMap.get(id)?.name ?? id}</span>
-              <div className="bar"><div style={{ width: `${(min / maxShow) * 100}%` }}>{Math.round(min / 60)}h</div></div>
+              <div className="bar"><div className="bar-fill" style={{ width: `${(min / maxShow) * 100}%` }} /></div>
+              <span className="bar-val">{Math.round(min / 60)}h</span>
             </div>
           ))}
         </>
@@ -143,7 +144,8 @@ export default function Stats() {
           {topGenres.map(([g, min]) => (
             <div className="bar-row" key={g}>
               <span className="lbl">{g}</span>
-              <div className="bar"><div style={{ width: `${(min / maxGenre) * 100}%` }}>{Math.round(min / 60)}h</div></div>
+              <div className="bar"><div className="bar-fill" style={{ width: `${(min / maxGenre) * 100}%` }} /></div>
+              <span className="bar-val">{Math.round(min / 60)}h</span>
             </div>
           ))}
         </>
@@ -155,7 +157,8 @@ export default function Stats() {
           {years.map(([y, n]) => (
             <div className="bar-row" key={y}>
               <span className="lbl">{y}</span>
-              <div className="bar"><div style={{ width: `${(n / maxYear) * 100}%` }}>{n}</div></div>
+              <div className="bar"><div className="bar-fill" style={{ width: `${(n / maxYear) * 100}%` }} /></div>
+              <span className="bar-val">{n.toLocaleString('it')}</span>
             </div>
           ))}
         </>
