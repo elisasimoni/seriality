@@ -23,6 +23,16 @@ interface Extras {
   similar: Rec[];
 }
 
+/** Etichetta countdown per un episodio non ancora uscito. */
+function countdown(airDate: string): string {
+  const days = Math.ceil((Date.parse(airDate) - Date.now()) / 86400000);
+  if (days <= 0) return 'oggi';
+  if (days === 1) return 'domani';
+  if (days < 30) return `tra ${days} giorni`;
+  const months = Math.round(days / 30);
+  return months === 1 ? 'tra ~1 mese' : `tra ~${months} mesi`;
+}
+
 export default function ShowDetail({ id }: { id: number }) {
   const [openSeason, setOpenSeason] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -254,7 +264,7 @@ export default function ShowDetail({ id }: { id: number }) {
                   <div className="ep-row" style={{ cursor: 'pointer' }} onClick={() => void toggleEpisode(e.key)}>
                     <span className="code">{epCode(e.season, e.number)}</span>
                     <span className={`nm ${e.watched ? 'seen' : ''}`} style={future ? { opacity: 0.5 } : undefined}>
-                      {expanded ? '▾ ' : ''}{e.name || `Episodio ${e.number}`}{future ? ' 🔜' : ''}
+                      {expanded ? '▾ ' : ''}{e.name || `Episodio ${e.number}`}
                     </span>
                     <Stars value={e.rating} onChange={(v) => db.episodes.update(e.key, { rating: v || undefined })} />
                     {e.watched ? (
@@ -269,12 +279,17 @@ export default function ShowDetail({ id }: { id: number }) {
                       >↻{(e.timesWatched ?? 1) > 1 ? ` ${e.timesWatched}×` : ''}</button>
                     ) : null}
                     <span className="date">{e.watched ? fmtDate(e.watchedAt) : (e.airDate ? fmtDate(e.airDate) : '')}</span>
-                    <button
-                      className={`check-btn small ${e.watched ? '' : 'off'}`}
-                      onClick={(ev) => { ev.stopPropagation(); void watchEpisode(e); }}
-                      disabled={!!future && !e.watched}
-                      title={e.watched ? 'Segna come non visto' : 'Segna come visto'}
-                    >✓</button>
+                    {future ? (
+                      <span className="countdown-badge" title={`Esce il ${fmtDate(e.airDate)}`}>
+                        ⏳ {countdown(e.airDate!)}
+                      </span>
+                    ) : (
+                      <button
+                        className={`check-btn small ${e.watched ? '' : 'off'}`}
+                        onClick={(ev) => { ev.stopPropagation(); void watchEpisode(e); }}
+                        title={e.watched ? 'Segna come non visto' : 'Segna come visto'}
+                      >✓</button>
+                    )}
                   </div>
                   {expanded && (
                     <div className="ep-synopsis">
