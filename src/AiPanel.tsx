@@ -1,23 +1,38 @@
 import { useState } from 'react';
 import { Empty, Poster, nav } from './components';
-import { hasGemini, recommendShowsAI, type AiPick } from './ai';
+import { hasGemini, recommendMoviesAI, recommendShowsAI, type AiPick } from './ai';
 import { hasTmdb } from './tmdb';
 
-const QUICK = [
-  'Un thriller coreano corto e teso',
-  'Qualcosa di leggero per staccare',
-  'Un fantasy epico da bingeare',
-  'Una commedia romantica che fa stare bene',
-  'Un mystery con un colpo di scena',
-];
+const QUICK: Record<'tv' | 'movie', string[]> = {
+  tv: [
+    'Un thriller coreano corto e teso',
+    'Qualcosa di leggero per staccare',
+    'Un fantasy epico da bingeare',
+    'Una commedia romantica che fa stare bene',
+  ],
+  movie: [
+    'Un film che fa piangere ma bene',
+    'Un thriller col colpo di scena finale',
+    'Una commedia romantica leggera',
+    'Un capolavoro visivo da vedere assolutamente',
+  ],
+};
 
 const scoreColor = (s: number) => (s >= 85 ? 'var(--green)' : s >= 70 ? 'var(--gold)' : 'var(--text-dim)');
 
 export default function AiPanel() {
+  const [target, setTarget] = useState<'tv' | 'movie'>('tv');
   const [q, setQ] = useState('');
   const [busy, setBusy] = useState(false);
   const [picks, setPicks] = useState<AiPick[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const switchTarget = (t: 'tv' | 'movie') => {
+    if (t === target) return;
+    setTarget(t);
+    setPicks(null);
+    setError(null);
+  };
 
   const ask = async (text: string) => {
     const query = text.trim();
@@ -26,7 +41,7 @@ export default function AiPanel() {
     setBusy(true);
     setError(null);
     try {
-      const res = await recommendShowsAI(query);
+      const res = target === 'tv' ? await recommendShowsAI(query) : await recommendMoviesAI(query);
       setPicks(res.picks);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Errore imprevisto');
@@ -47,9 +62,13 @@ export default function AiPanel() {
 
   return (
     <>
+      <div className="chip-row" style={{ marginBottom: 12 }}>
+        <button className={`chip ${target === 'tv' ? 'active' : ''}`} onClick={() => switchTarget('tv')}>📺 Serie</button>
+        <button className={`chip ${target === 'movie' ? 'active' : ''}`} onClick={() => switchTarget('movie')}>🍿 Film</button>
+      </div>
       <div className="search-bar">
         <input
-          type="search" placeholder="Descrivi cosa ti va di guardare…"
+          type="search" placeholder={target === 'tv' ? 'Che serie ti va di guardare?…' : 'Che film ti va di vedere?…'}
           value={q} onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && void ask(q)}
           autoFocus
@@ -62,11 +81,11 @@ export default function AiPanel() {
       {picks === null && !busy && (
         <>
           <div className="chip-row">
-            {QUICK.map((s) => (
+            {QUICK[target].map((s) => (
               <button key={s} className="chip" onClick={() => void ask(s)}>{s}</button>
             ))}
           </div>
-          <Empty icon="🍿" title="Cosa guardo stasera?">
+          <Empty icon={target === 'tv' ? '📺' : '🍿'} title="Cosa guardo stasera?">
             Scrivi un'idea (mood, tema, durata…) o tocca uno spunto qui sopra.
             Terrò conto dei tuoi gusti ed escluderò ciò che hai già visto.
           </Empty>
@@ -88,7 +107,7 @@ export default function AiPanel() {
       {picks && picks.length > 0 && (
         <div className="ai-list">
           {picks.map((p) => (
-            <div className="ai-card" key={p.id} onClick={() => nav(`/preview/tv/${p.id}`)}>
+            <div className="ai-card" key={p.id} onClick={() => nav(`/preview/${target}/${p.id}`)}>
               <div className="ai-poster"><Poster src={p.poster} name={p.title} /></div>
               <div className="ai-body">
                 <div className="ai-head">

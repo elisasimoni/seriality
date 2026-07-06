@@ -255,6 +255,35 @@ export async function searchTvRaw(query: string): Promise<RawTv[]> {
   } catch { return []; }
 }
 
+export interface RawMovie {
+  id: number; title?: string; original_title?: string; overview?: string;
+  release_date?: string; vote_average?: number; vote_count?: number;
+  genre_ids?: number[]; original_language?: string; popularity?: number;
+  poster_path?: string | null;
+}
+
+let _movieGenres: Map<number, string> | null = null;
+export async function movieGenreMap(): Promise<Map<number, string>> {
+  if (_movieGenres) return _movieGenres;
+  const data = (await tmdb('/genre/movie/list')) as { genres?: { id: number; name: string }[] };
+  _movieGenres = new Map((data.genres ?? []).map((g) => [g.id, g.name]));
+  return _movieGenres;
+}
+
+export async function discoverMovieRaw(params: Record<string, string>): Promise<RawMovie[]> {
+  try {
+    const data = (await tmdb('/discover/movie', params)) as { results?: RawMovie[] };
+    return data.results ?? [];
+  } catch { return []; }
+}
+
+export async function searchMovieRaw(query: string): Promise<RawMovie[]> {
+  try {
+    const data = (await tmdb('/search/movie', { query, include_adult: 'false' })) as { results?: RawMovie[] };
+    return data.results ?? [];
+  } catch { return []; }
+}
+
 export async function movieDetailsById(id: number): Promise<TmdbMovie | null> {
   return movieDetails(id);
 }
