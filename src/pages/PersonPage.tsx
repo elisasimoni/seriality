@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../db';
+import { db, normTitle } from '../db';
 import { fmtDate } from '../components';
 import {
   personCombinedCredits, personDetails, posterUrl,
@@ -9,8 +9,6 @@ import {
 import { TitleRow } from '../extras';
 import type { Rec } from '../recommend';
 
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');
-
 export default function PersonPage({ personId }: { personId: number }) {
   const [person, setPerson] = useState<TmdbPerson | null | undefined>(undefined);
   const [credits, setCredits] = useState<TmdbCredit[]>([]);
@@ -18,9 +16,9 @@ export default function PersonPage({ personId }: { personId: number }) {
   const lib = useLiveQuery(async () => {
     const [shows, movies] = await Promise.all([db.shows.toArray(), db.movies.toArray()]);
     return {
-      showNames: new Set(shows.map((s) => slug(s.name))),
+      showNames: new Set(shows.map((s) => normTitle(s.name))),
       movieTmdb: new Set(movies.map((m) => m.tmdbId).filter(Boolean)),
-      movieNames: new Set(movies.map((m) => slug(m.name))),
+      movieNames: new Set(movies.map((m) => normTitle(m.name))),
     };
   });
 
@@ -50,8 +48,8 @@ export default function PersonPage({ personId }: { personId: number }) {
     overview: c.character ? `Interpreta ${c.character}` : undefined,
   });
   const inLib = (r: Rec) =>
-    r.kind === 'tv' ? lib?.showNames.has(slug(r.name))
-      : lib?.movieTmdb.has(r.tmdbId) || lib?.movieNames.has(slug(r.name));
+    r.kind === 'tv' ? lib?.showNames.has(normTitle(r.name))
+      : lib?.movieTmdb.has(r.tmdbId) || lib?.movieNames.has(normTitle(r.name));
 
   const tv = credits.filter((c) => c.media_type === 'tv' && (c.episode_count ?? 99) > 2).map(toRec);
   const movies = credits.filter((c) => c.media_type === 'movie').map(toRec);

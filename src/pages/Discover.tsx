@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, nowIso } from '../db';
+import { db, normTitle, nowIso } from '../db';
 import { Empty, Poster, nav, toast } from '../components';
 import { searchShows, tmShowToLocal, enrichShow } from '../tvmaze';
 import { findTvByTvdb, hasTmdb, searchMovies, posterUrl, tvExternalIds } from '../tmdb';
@@ -27,7 +27,7 @@ export default function Discover() {
   const [added, setAdded] = useState<Set<string>>(new Set());
   const followedIds = useLiveQuery(async () => new Set((await db.shows.toArray()).map((s) => s.id)));
   const showNames = useLiveQuery(async () =>
-    new Set((await db.shows.toArray()).map((s) => s.name.toLowerCase().replace(/[^a-z0-9]+/g, ''))));
+    new Set((await db.shows.toArray()).map((s) => normTitle(s.name))));
   const movieKeys = useLiveQuery(async () => {
     const all = await db.movies.toArray();
     return new Set(all.map((m) => m.tmdbId).filter(Boolean));
@@ -176,7 +176,7 @@ export default function Discover() {
                   const k = `${r.kind}:${r.tmdbId}`;
                   const inLib = added.has(k)
                     || (r.kind === 'movie' && movieKeys?.has(r.tmdbId))
-                    || (r.kind === 'tv' && showNames?.has(r.name.toLowerCase().replace(/[^a-z0-9]+/g, '')));
+                    || (r.kind === 'tv' && showNames?.has(normTitle(r.name)));
                   return (
                     <div className="poster-card" key={k} title={r.overview}
                       onClick={() => nav(`/preview/${r.kind}/${r.tmdbId}`)}>
@@ -224,8 +224,7 @@ export default function Discover() {
         : (
           <div className="poster-grid">
             {shows.map((r) => {
-              const followed = followedIds?.has(r.localId)
-                || showNames?.has(r.name.toLowerCase().replace(/[^a-z0-9]+/g, ''));
+              const followed = followedIds?.has(r.localId) || showNames?.has(normTitle(r.name));
               const openPreview = async () => {
                 if (followed) { nav(`/show/${r.localId}`); return; }
                 // risolvi tvdb → tmdb per l'anteprima

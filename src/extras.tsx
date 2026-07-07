@@ -2,7 +2,7 @@
 // cast, "dove guardarlo", titoli simili. Dati TMDB.
 
 import { useState } from 'react';
-import { db, nowIso } from './db';
+import { db, normTitle, nowIso } from './db';
 import { Poster, nav, toast } from './components';
 import { enrichShow, searchShows, tmShowToLocal } from './tvmaze';
 import { posterUrl, tvExternalIds, type TmdbCastMember, type WatchProvider } from './tmdb';
@@ -119,13 +119,12 @@ export function TitleRow({ title, items, subOf, openOnly }: {
   };
 
   const openInLibrary = async (r: Rec) => {
-    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');
     if (r.kind === 'movie') {
       const all = await db.movies.toArray();
-      const hit = all.find((m) => m.tmdbId === r.tmdbId) ?? all.find((m) => norm(m.name) === norm(r.name));
+      const hit = all.find((m) => m.tmdbId === r.tmdbId) ?? all.find((m) => normTitle(m.name) === normTitle(r.name));
       if (hit) { nav(`/movie/${encodeURIComponent(hit.key)}`); return; }
     } else {
-      const hit = (await db.shows.toArray()).find((s) => norm(s.name) === norm(r.name));
+      const hit = (await db.shows.toArray()).find((s) => normTitle(s.name) === normTitle(r.name));
       if (hit) { nav(`/show/${hit.id}`); return; }
     }
     toast('Non lo trovo in libreria 🤔');

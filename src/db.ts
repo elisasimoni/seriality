@@ -25,6 +25,14 @@ export const epKey = (showId: number, season: number, number: number) =>
 
 export const nowIso = () => new Date().toISOString();
 
+/**
+ * Normalizza un titolo per il confronto "stesso show/film" tra fonti diverse.
+ * Usa \p{L}/\p{N} (non a-z0-9) perché molti titoli sono in coreano/giapponese/ecc.:
+ * scartare tutto ciò che non è ASCII collasserebbe titoli non latini diversi
+ * nella stessa stringa vuota, facendoli combaciare a caso tra loro.
+ */
+export const normTitle = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+
 export async function setEpisodeWatched(ep: Episode, watched: boolean) {
   await db.episodes.update(ep.key, {
     watched: watched ? 1 : 0,

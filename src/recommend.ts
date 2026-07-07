@@ -7,7 +7,7 @@
 //  3. aggiunge le tendenze della settimana
 //  4. esclude tutto ciò che è già in libreria; cache 12h in IndexedDB (kv)
 
-import { db } from './db';
+import { db, normTitle } from './db';
 import {
   findTvByTvdb, hasTmdb, movieRecommendations, posterUrl,
   trendingWeek, tvRecommendations,
@@ -28,7 +28,6 @@ export interface RecSection { title: string; items: Rec[] }
 
 const CACHE_KEY = 'recs-v1';
 const CACHE_TTL = 12 * 3600 * 1000;
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');
 
 export async function getRecommendations(force = false): Promise<RecSection[]> {
   if (!hasTmdb()) return [];
@@ -45,12 +44,12 @@ async function build(): Promise<RecSection[]> {
   const [shows, movies] = await Promise.all([db.shows.toArray(), db.movies.toArray()]);
 
   // già in libreria → da escludere dai consigli
-  const libShowNames = new Set(shows.map((s) => slug(s.name)));
+  const libShowNames = new Set(shows.map((s) => normTitle(s.name)));
   const libMovieTmdb = new Set(movies.map((m) => m.tmdbId).filter(Boolean));
-  const libMovieNames = new Set(movies.map((m) => slug(m.name)));
+  const libMovieNames = new Set(movies.map((m) => normTitle(m.name)));
   const isKnown = (r: Rec) =>
-    r.kind === 'tv' ? libShowNames.has(slug(r.name))
-      : libMovieTmdb.has(r.tmdbId) || libMovieNames.has(slug(r.name));
+    r.kind === 'tv' ? libShowNames.has(normTitle(r.name))
+      : libMovieTmdb.has(r.tmdbId) || libMovieNames.has(normTitle(r.name));
 
   // semi: preferiti e voti alti prima, poi attività recente
   const score = (fav?: boolean, rating?: number, recent?: string) =>

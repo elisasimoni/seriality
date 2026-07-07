@@ -11,7 +11,7 @@
 // Provider: Google Gemini, chiamato direttamente dal browser (tier gratuito).
 // La chiave sta in localStorage (Impostazioni), mai nel bundle pubblico.
 
-import { db } from './db';
+import { db, normTitle } from './db';
 import {
   discoverMovieRaw, discoverTvRaw, movieGenreMap, posterUrl, searchMovieRaw,
   searchTvRaw, tvGenreMap, type RawMovie, type RawTv,
@@ -265,10 +265,9 @@ export async function recommendShowsAI(userText: string): Promise<AiResult> {
   // e per nome normalizzato (fallback per le serie senza tmdbId salvato)
   const shows = await db.shows.toArray();
   const ownedTmdb = new Set(shows.map((s) => s.tmdbId).filter(Boolean) as number[]);
-  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');
-  const ownedNames = new Set(shows.map((s) => norm(s.name)));
+  const ownedNames = new Set(shows.map((s) => normTitle(s.name)));
   const isOwned = (c: Candidate) =>
-    ownedTmdb.has(c.id) || ownedNames.has(norm(c.title)) || (c.originalTitle && ownedNames.has(norm(c.originalTitle)));
+    ownedTmdb.has(c.id) || ownedNames.has(normTitle(c.title)) || (c.originalTitle && ownedNames.has(normTitle(c.originalTitle)));
 
   const fresh = pool.filter((c) => !isOwned(c));
   const candidates = fresh.length >= 5 ? fresh : pool; // se troppo pochi, non svuotare
@@ -352,10 +351,9 @@ export async function recommendMoviesAI(userText: string): Promise<AiResult> {
 
   const movies = await db.movies.toArray();
   const ownedTmdb = new Set(movies.map((m) => m.tmdbId).filter(Boolean) as number[]);
-  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');
-  const ownedNames = new Set(movies.map((m) => norm(m.name)));
+  const ownedNames = new Set(movies.map((m) => normTitle(m.name)));
   const isOwned = (c: Candidate) =>
-    ownedTmdb.has(c.id) || ownedNames.has(norm(c.title)) || (c.originalTitle && ownedNames.has(norm(c.originalTitle)));
+    ownedTmdb.has(c.id) || ownedNames.has(normTitle(c.title)) || (c.originalTitle && ownedNames.has(normTitle(c.originalTitle)));
 
   const fresh = pool.filter((c) => !isOwned(c));
   const candidates = fresh.length >= 5 ? fresh : pool;

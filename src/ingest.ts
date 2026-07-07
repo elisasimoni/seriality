@@ -18,7 +18,7 @@ import type {
   EpisodeWatch, ImportResult, ImportedMovie, ImportedShow,
 } from './types';
 import type { Episode, Movie, Show } from './types';
-import { db, epKey, nowIso } from './db';
+import { db, epKey, normTitle, nowIso } from './db';
 
 interface NamedText { name: string; text: string }
 
@@ -748,7 +748,7 @@ function hash(s: string): number {
   for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
   return h;
 }
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 60);
+const slug = (s: string) => normTitle(s).slice(0, 60);
 
 const counts = (o: ImportResult) => ({ s: o.shows.length, e: o.episodeWatches.length, m: o.movies.length });
 function delta(before: { s: number; e: number; m: number }, o: ImportResult) {
