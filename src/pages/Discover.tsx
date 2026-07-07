@@ -224,7 +224,8 @@ export default function Discover() {
         : (
           <div className="poster-grid">
             {shows.map((r) => {
-              const followed = followedIds?.has(r.localId);
+              const followed = followedIds?.has(r.localId)
+                || showNames?.has(r.name.toLowerCase().replace(/[^a-z0-9]+/g, ''));
               const openPreview = async () => {
                 if (followed) { nav(`/show/${r.localId}`); return; }
                 // risolvi tvdb → tmdb per l'anteprima

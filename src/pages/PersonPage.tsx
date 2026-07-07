@@ -90,7 +90,7 @@ export default function PersonPage({ personId }: { personId: number }) {
         </div>
       </div>
 
-      {known.length > 0 && <TitleRow title={`Già nella tua libreria (${known.length})`} items={known.slice(0, 12)} subOf={sub} openOnly />}
+      {known.length > 0 && <TitleRow title={`Già nella tua libreria (${known.length})`} items={known} subOf={sub} openOnly />}
       <TitleRow title={`Serie TV (${tv.length})`} items={tv.slice(0, 16)} subOf={sub} />
       <TitleRow title={`Film (${movies.length})`} items={movies.slice(0, 16)} subOf={sub} />
     </>
