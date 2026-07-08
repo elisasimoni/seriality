@@ -62,6 +62,7 @@ export default function PersonPage({ personId }: { personId: number }) {
   };
 
   const bio = person.biography?.trim();
+  const akaList = [...new Set((person.also_known_as ?? []).filter((a) => a && a !== person.name))].slice(0, 4);
   return (
     <>
       <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', marginBottom: 10, flexWrap: 'wrap' }}>
@@ -75,7 +76,22 @@ export default function PersonPage({ personId }: { personId: number }) {
             {person.birthday && <span>🎂 {fmtDate(person.birthday)}{person.deathday ? ` – ✝ ${fmtDate(person.deathday)}` : ''}</span>}
             {person.place_of_birth && <span>📍 {person.place_of_birth}</span>}
             <span>🎬 {credits.length} titoli</span>
+            {person.imdb_id && (
+              <a href={`https://www.imdb.com/name/${person.imdb_id}/`} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>
+                IMDb ↗
+              </a>
+            )}
+            {person.homepage && (
+              <a href={person.homepage} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>
+                Sito ↗
+              </a>
+            )}
           </div>
+          {akaList.length > 0 && (
+            <p style={{ color: 'var(--text-dim)', fontSize: 12.5, marginTop: 4 }}>
+              Conosciuta/o anche come: {akaList.join(', ')}
+            </p>
+          )}
           {bio && (
             <p style={{ color: 'var(--text-dim)', maxWidth: 720, fontSize: 14 }}>
               {bioOpen || bio.length <= 340 ? bio : bio.slice(0, 340) + '… '}
