@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Show } from './types';
 import type { ShowProgress } from './db';
+import { displayTitle } from './korean';
 
 export function nav(to: string) {
   location.hash = to;
@@ -174,7 +175,7 @@ export function ShowCard({ show, progress, sub }: { show: Show; progress?: ShowP
       <Poster src={show.poster} name={show.name} />
       {show.favorite && <div className="fav">❤️</div>}
       <div className="meta">
-        <div className="name">{show.name}</div>
+        <div className="name">{displayTitle(show.name)}</div>
         <div className="sub">
           {sub ?? (progress ? `${progress.watched}/${progress.total || '?'} episodi` : '')}
         </div>

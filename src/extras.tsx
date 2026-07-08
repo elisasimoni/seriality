@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { db, normTitle, nowIso } from './db';
 import { Poster, nav, toast } from './components';
+import { displayTitle } from './korean';
 import { enrichShow, searchShows, tmShowToLocal } from './tvmaze';
 import { posterUrl, tvExternalIds, type TmdbCastMember, type WatchProvider } from './tmdb';
 import type { Rec } from './recommend';
@@ -144,7 +145,7 @@ export function TitleRow({ title, items, subOf, openOnly }: {
             >
               <Poster src={r.poster} name={r.name} />
               <div className="meta">
-                <div className="name" title={r.name}>{r.name}</div>
+                <div className="name" title={r.name}>{displayTitle(r.name)}</div>
                 <div className="sub">
                   {subOf?.(r) ?? `${r.kind === 'tv' ? '📺' : '🍿'} ${r.year ?? ''}${r.vote ? ` · ★ ${r.vote.toFixed(1)}` : ''}`}
                 </div>

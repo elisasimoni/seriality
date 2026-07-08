@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, nowIso } from '../db';
 import { AdjacentNav, Stars, fmtDate, nav, toast } from '../components';
+import { displayTitle } from '../korean';
 import {
   hasTmdb, movieCredits, movieDetailsById, movieRecommendations, posterUrl,
   searchMovies, trailerUrl, watchProviders,
@@ -107,7 +108,7 @@ export default function MovieDetail({ movieKey }: { movieKey: string }) {
         <div className="inner">
           {movie.poster && <img className="poster" src={movie.poster} alt="" />}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h1>{movie.name}</h1>
+            <h1>{displayTitle(movie.name)}</h1>
             <div className="facts">
               <span>{movie.watched ? `✓ Visto ${fmtDate(movie.watchedAt)}` : '🕐 In watchlist'}</span>
               {movie.releaseDate && <span>{movie.releaseDate.slice(0, 4)}</span>}

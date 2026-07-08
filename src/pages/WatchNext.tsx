@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, computeProgress, setEpisodeWatched } from '../db';
 import { Empty, epCode, nav, toast } from '../components';
+import { displayTitle } from '../korean';
 import SummaryBar from '../SummaryBar';
 
 export default function WatchNext() {
@@ -50,7 +51,7 @@ export default function WatchNext() {
                       {epCode(ep.season, ep.number)}
                       {remaining > 1 && <span style={{ color: 'var(--text-dim)', fontWeight: 500 }}> · +{remaining - 1} da vedere</span>}
                     </div>
-                    <div className="show-name">{show.name}</div>
+                    <div className="show-name">{displayTitle(show.name)}</div>
                     <div className="ep-name">{ep.name || 'Episodio ' + ep.number}</div>
                     <div className="progress" style={{ width: '85%' }}>
                       <div style={{ width: `${(prog.watched / Math.max(1, prog.total)) * 100}%` }} />

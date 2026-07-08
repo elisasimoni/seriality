@@ -134,6 +134,7 @@ export interface TmdbPerson {
   id: number; name: string; biography?: string; birthday?: string | null;
   deathday?: string | null; place_of_birth?: string | null;
   profile_path?: string | null; known_for_department?: string;
+  also_known_as?: string[];
 }
 
 export async function personDetails(personId: number): Promise<TmdbPerson | null> {

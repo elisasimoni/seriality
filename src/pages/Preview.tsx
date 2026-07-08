@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { db, nowIso } from '../db';
 import { Poster, epCode, fmtDate, nav, toast } from '../components';
+import { displayTitle } from '../korean';
 import {
   movieCredits, movieDetailsById, movieRecommendations, posterUrl,
   seasonDetails, trailerUrl, tvCredits, tvDetails, tvExternalIds,
@@ -160,7 +161,7 @@ export default function Preview({ kind, tmdbId }: { kind: 'tv' | 'movie'; tmdbId
         <div className="inner">
           {info.poster && <img className="poster" src={info.poster} alt="" />}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h1>{info.name}</h1>
+            <h1>{displayTitle(info.name)}</h1>
             <div className="facts">{info.facts.map((f) => <span key={f}>{f}</span>)}</div>
             <div className="actions">
               {libTarget ? (

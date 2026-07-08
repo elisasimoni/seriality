@@ -5,6 +5,7 @@ import {
   setEpisodeWatched, setSeasonWatched,
 } from '../db';
 import { AdjacentNav, Stars, askConfirm, epCode, fmtDate, nav, toast } from '../components';
+import { displayTitle } from '../korean';
 import type { Episode } from '../types';
 import { enrichShow, tvmazeEpisode } from '../tvmaze';
 import {
@@ -175,7 +176,7 @@ export default function ShowDetail({ id }: { id: number }) {
         <div className="inner">
           {show.poster && <img className="poster" src={show.poster} alt="" />}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h1>{show.name}</h1>
+            <h1>{displayTitle(show.name)}</h1>
             <div className="facts">
               <span>{statusLabel}</span>
               {show.network && <span>{show.network}{show.country ? ` (${show.country})` : ''}</span>}

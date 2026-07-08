@@ -7,6 +7,7 @@ import {
   type TmdbCredit, type TmdbPerson,
 } from '../tmdb';
 import { TitleRow } from '../extras';
+import { pickLatinName } from '../korean';
 import type { Rec } from '../recommend';
 
 export default function PersonPage({ personId }: { personId: number }) {
@@ -68,7 +69,7 @@ export default function PersonPage({ personId }: { personId: number }) {
           ? <img src={posterUrl(person.profile_path)} alt="" style={{ width: 150, borderRadius: 16, border: '1px solid var(--border)' }} />
           : <div style={{ width: 150, height: 220, borderRadius: 16, background: 'var(--grad)', opacity: 0.35, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 50 }}>🎭</div>}
         <div style={{ flex: 1, minWidth: 260 }}>
-          <h1 className="page-title" style={{ marginBottom: 6 }}>{person.name}</h1>
+          <h1 className="page-title" style={{ marginBottom: 6 }}>{pickLatinName(person.name, person.also_known_as)}</h1>
           <div className="facts" style={{ color: 'var(--text-dim)', fontSize: 13.5, display: 'flex', gap: 14, flexWrap: 'wrap' }}>
             {person.known_for_department && <span>{person.known_for_department === 'Acting' ? 'Attore/Attrice' : person.known_for_department}</span>}
             {person.birthday && <span>🎂 {fmtDate(person.birthday)}{person.deathday ? ` – ✝ ${fmtDate(person.deathday)}` : ''}</span>}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, normTitle, nowIso } from '../db';
 import { Empty, Poster, nav, toast } from '../components';
+import { displayTitle } from '../korean';
 import { searchShows, tmShowToLocal, enrichShow } from '../tvmaze';
 import { findTvByTvdb, hasTmdb, searchMovies, posterUrl, tvExternalIds } from '../tmdb';
 import { getRecommendations, type Rec, type RecSection } from '../recommend';
@@ -182,7 +183,7 @@ export default function Discover() {
                       onClick={() => nav(`/preview/${r.kind}/${r.tmdbId}`)}>
                       <Poster src={r.poster} name={r.name} />
                       <div className="meta">
-                        <div className="name" title={r.name}>{r.name}</div>
+                        <div className="name" title={r.name}>{displayTitle(r.name)}</div>
                         <div className="sub">
                           {r.kind === 'tv' ? '📺' : '🍿'} {r.year ?? ''}{r.vote ? ` · ★ ${r.vote.toFixed(1)}` : ''}
                         </div>
@@ -236,7 +237,7 @@ export default function Discover() {
                 <div className="poster-card" key={r.id} onClick={() => void openPreview()}>
                   <Poster src={r.poster} name={r.name} />
                   <div className="meta">
-                    <div className="name">{r.name}</div>
+                    <div className="name">{displayTitle(r.name)}</div>
                     <div className="sub">{[r.premiered?.slice(0, 4), r.network].filter(Boolean).join(' · ')}</div>
                     <button
                       className={`btn ${followed ? '' : 'primary'}`}
@@ -264,7 +265,7 @@ export default function Discover() {
                 <div className="poster-card" key={r.tmdbId} onClick={() => nav(`/preview/movie/${r.tmdbId}`)}>
                   <Poster src={r.poster} name={r.name} />
                   <div className="meta">
-                    <div className="name">{r.name}</div>
+                    <div className="name">{displayTitle(r.name)}</div>
                     <div className="sub">{r.year ?? ''}{inLib ? ' · in libreria ✓' : ''}</div>
                     <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                       <button className="btn primary" style={{ flex: 1, justifyContent: 'center', padding: '7px 0' }}

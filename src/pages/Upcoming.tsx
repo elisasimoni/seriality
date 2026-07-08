@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
 import { Empty, epCode, nav } from '../components';
+import { displayTitle } from '../korean';
 
 export default function Upcoming() {
   const groups = useLiveQuery(async () => {
@@ -53,7 +54,7 @@ export default function Upcoming() {
                     ? <img src={show.poster} alt="" loading="lazy" />
                     : <div style={{ width: 40, height: 58, borderRadius: 8, background: 'var(--grad)', opacity: 0.4 }} />}
                   <div className="t">
-                    <div className="s">{show.name}</div>
+                    <div className="s">{displayTitle(show.name)}</div>
                     <div className="e">{epCode(e.season, e.number)} · {e.name || 'Episodio ' + e.number}</div>
                   </div>
                   <span className="badge">{show.network || e.airTime || ''}</span>
