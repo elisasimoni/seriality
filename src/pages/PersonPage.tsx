@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { buildNameYearIndex, db, nameYearMatch } from '../db';
+import { db, sameTitle } from '../db';
 import { fmtDate } from '../components';
 import {
   personCombinedCredits, personDetails, posterUrl,
@@ -16,12 +16,7 @@ export default function PersonPage({ personId }: { personId: number }) {
   const [bioOpen, setBioOpen] = useState(false);
   const lib = useLiveQuery(async () => {
     const [shows, movies] = await Promise.all([db.shows.toArray(), db.movies.toArray()]);
-    return {
-      showTmdb: new Set(shows.map((s) => s.tmdbId).filter(Boolean)),
-      showIndex: buildNameYearIndex(shows.map((s) => ({ name: s.name, year: s.premiered?.slice(0, 4) }))),
-      movieTmdb: new Set(movies.map((m) => m.tmdbId).filter(Boolean)),
-      movieIndex: buildNameYearIndex(movies.map((m) => ({ name: m.name, year: m.releaseDate?.slice(0, 4) }))),
-    };
+    return { shows, movies };
   });
 
   useEffect(() => {
@@ -52,28 +47,44 @@ export default function PersonPage({ personId }: { personId: number }) {
   // Match libreria per id TMDB (robusto ai titoli localizzati: TMDB restituisce
   // il titolo it-IT/originale, mentre in libreria il nome arriva da TVDB/TVmaze
   // e può essere in un'altra lingua). Fallback su titolo tradotto e originale.
-  const inLib = (c: TmdbCredit) => {
-    if (!lib) return false;
+  // Ritorna la voce di libreria che ha combaciato, per mostrare nella card
+  // "In libreria: <nome>" — così un match sbagliato è visibile e rintracciabile.
+  const libMatch = (c: TmdbCredit): { name: string; via: 'id' | 'nome' } | undefined => {
+    if (!lib) return undefined;
     const year = (c.media_type === 'tv' ? c.first_air_date : c.release_date)?.slice(0, 4);
+    const titles = (c.media_type === 'tv' ? [c.name, c.original_name] : [c.title, c.original_title])
+      .filter(Boolean) as string[];
     if (c.media_type === 'tv') {
-      return lib.showTmdb.has(c.id)
-        || nameYearMatch(lib.showIndex, c.name ?? '', year)
-        || (!!c.original_name && nameYearMatch(lib.showIndex, c.original_name, year));
+      const byId = lib.shows.find((s) => s.tmdbId != null && s.tmdbId === c.id);
+      if (byId) return { name: byId.name, via: 'id' };
+      const byName = lib.shows.find((s) => titles.some((t) => sameTitle(s.name, s.premiered?.slice(0, 4), t, year)));
+      return byName && { name: byName.name, via: 'nome' };
     }
-    return lib.movieTmdb.has(c.id)
-      || nameYearMatch(lib.movieIndex, c.title ?? '', year)
-      || (!!c.original_title && nameYearMatch(lib.movieIndex, c.original_title, year));
+    const byId = lib.movies.find((m) => m.tmdbId != null && m.tmdbId === c.id);
+    if (byId) return { name: byId.name, via: 'id' };
+    const byName = lib.movies.find((m) => titles.some((t) => sameTitle(m.name, m.releaseDate?.slice(0, 4), t, year)));
+    return byName && { name: byName.name, via: 'nome' };
   };
 
   const tv = credits.filter((c) => c.media_type === 'tv' && (c.episode_count ?? 99) > 2).map(toRec);
   const movies = credits.filter((c) => c.media_type === 'movie').map(toRec);
   // "Già in libreria" da tutti i credits: un titolo posseduto non va nascosto
   // dal filtro sugli episodi (ruoli guest con ≤2 episodi restano visibili).
-  const known = credits.filter(inLib).map(toRec);
+  const matches = credits
+    .map((c) => ({ c, m: libMatch(c) }))
+    .filter((x): x is { c: TmdbCredit; m: { name: string; via: 'id' | 'nome' } } => !!x.m);
+  const known = matches.map((x) => toRec(x.c));
+  const matchOf = new Map(matches.map((x) => [`${x.c.media_type}:${x.c.id}`, x.m]));
   const charOf = new Map(credits.map((c) => [`${c.media_type}:${c.id}`, c.character]));
   const sub = (r: Rec) => {
     const ch = charOf.get(`${r.kind}:${r.tmdbId}`);
     return ch ? `${r.kind === 'tv' ? '📺' : '🍿'} ${ch}` : undefined;
+  };
+  // Nelle card "già in libreria" mostra la voce combaciata: se il nome è
+  // diverso dal titolo TMDB (o il match è solo per nome) si vede subito.
+  const subKnown = (r: Rec) => {
+    const m = matchOf.get(`${r.kind}:${r.tmdbId}`);
+    return m ? `📚 ${m.name}${m.via === 'nome' ? ' (match per nome)' : ''}` : sub(r);
   };
 
   const bio = person.biography?.trim();
@@ -120,7 +131,7 @@ export default function PersonPage({ personId }: { personId: number }) {
         </div>
       </div>
 
-      {known.length > 0 && <TitleRow title={`Già nella tua libreria (${known.length})`} items={known} subOf={sub} openOnly />}
+      {known.length > 0 && <TitleRow title={`Già nella tua libreria (${known.length})`} items={known} subOf={subKnown} openOnly />}
       <TitleRow title={`Serie TV (${tv.length})`} items={tv.slice(0, 16)} subOf={sub} />
       <TitleRow title={`Film (${movies.length})`} items={movies.slice(0, 16)} subOf={sub} />
     </>
