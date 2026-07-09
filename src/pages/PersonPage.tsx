@@ -17,6 +17,7 @@ export default function PersonPage({ personId }: { personId: number }) {
   const lib = useLiveQuery(async () => {
     const [shows, movies] = await Promise.all([db.shows.toArray(), db.movies.toArray()]);
     return {
+      showTmdb: new Set(shows.map((s) => s.tmdbId).filter(Boolean)),
       showIndex: buildNameYearIndex(shows.map((s) => ({ name: s.name, year: s.premiered?.slice(0, 4) }))),
       movieTmdb: new Set(movies.map((m) => m.tmdbId).filter(Boolean)),
       movieIndex: buildNameYearIndex(movies.map((m) => ({ name: m.name, year: m.releaseDate?.slice(0, 4) }))),
@@ -48,13 +49,27 @@ export default function PersonPage({ personId }: { personId: number }) {
     vote: c.vote_average,
     overview: c.character ? `Interpreta ${c.character}` : undefined,
   });
-  const inLib = (r: Rec) =>
-    r.kind === 'tv' ? !!lib && nameYearMatch(lib.showIndex, r.name, r.year)
-      : lib?.movieTmdb.has(r.tmdbId) || (!!lib && nameYearMatch(lib.movieIndex, r.name, r.year));
+  // Match libreria per id TMDB (robusto ai titoli localizzati: TMDB restituisce
+  // il titolo it-IT/originale, mentre in libreria il nome arriva da TVDB/TVmaze
+  // e può essere in un'altra lingua). Fallback su titolo tradotto e originale.
+  const inLib = (c: TmdbCredit) => {
+    if (!lib) return false;
+    const year = (c.media_type === 'tv' ? c.first_air_date : c.release_date)?.slice(0, 4);
+    if (c.media_type === 'tv') {
+      return lib.showTmdb.has(c.id)
+        || nameYearMatch(lib.showIndex, c.name ?? '', year)
+        || (!!c.original_name && nameYearMatch(lib.showIndex, c.original_name, year));
+    }
+    return lib.movieTmdb.has(c.id)
+      || nameYearMatch(lib.movieIndex, c.title ?? '', year)
+      || (!!c.original_title && nameYearMatch(lib.movieIndex, c.original_title, year));
+  };
 
   const tv = credits.filter((c) => c.media_type === 'tv' && (c.episode_count ?? 99) > 2).map(toRec);
   const movies = credits.filter((c) => c.media_type === 'movie').map(toRec);
-  const known = [...tv, ...movies].filter(inLib);
+  // "Già in libreria" da tutti i credits: un titolo posseduto non va nascosto
+  // dal filtro sugli episodi (ruoli guest con ≤2 episodi restano visibili).
+  const known = credits.filter(inLib).map(toRec);
   const charOf = new Map(credits.map((c) => [`${c.media_type}:${c.id}`, c.character]));
   const sub = (r: Rec) => {
     const ch = charOf.get(`${r.kind}:${r.tmdbId}`);
