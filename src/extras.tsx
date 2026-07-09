@@ -83,10 +83,18 @@ export function ProvidersRow({ providers, link }: { providers: WatchProvider[]; 
       <h3 className="rec-title">Dove guardarlo in streaming (IT)</h3>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         {providers.map((p) => (
-          <span className="provider" key={p.provider_name} title={p.provider_name}>
-            {p.logo_path && <img src={posterUrl(p.logo_path, 'w45')} alt="" />}
-            {p.provider_name}
-          </span>
+          link ? (
+            <a className="provider" key={p.provider_name} title={p.provider_name}
+              href={link} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
+              {p.logo_path && <img src={posterUrl(p.logo_path, 'w45')} alt="" />}
+              {p.provider_name}
+            </a>
+          ) : (
+            <span className="provider" key={p.provider_name} title={p.provider_name}>
+              {p.logo_path && <img src={posterUrl(p.logo_path, 'w45')} alt="" />}
+              {p.provider_name}
+            </span>
+          )
         ))}
         {link && <a className="btn" style={{ padding: '6px 12px', fontSize: 12 }} href={link} target="_blank" rel="noreferrer">tutte le opzioni ↗</a>}
       </div>
