@@ -143,6 +143,7 @@ export async function personDetails(personId: number): Promise<TmdbPerson | null
 
 export interface TmdbCredit {
   media_type: 'tv' | 'movie'; id: number; title?: string; name?: string;
+  original_title?: string; original_name?: string;
   poster_path?: string | null; character?: string; vote_average?: number;
   release_date?: string; first_air_date?: string; episode_count?: number; popularity?: number;
 }

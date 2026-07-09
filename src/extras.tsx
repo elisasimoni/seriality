@@ -134,7 +134,10 @@ export function TitleRow({ title, items, subOf, openOnly }: {
         ?? all.find((m) => sameTitle(m.name, m.releaseDate?.slice(0, 4), r.name, r.year));
       if (hit) { nav(`/movie/${encodeURIComponent(hit.key)}`); return; }
     } else {
-      const hit = (await db.shows.toArray()).find((s) => sameTitle(s.name, s.premiered?.slice(0, 4), r.name, r.year));
+      // Prima per id TMDB (robusto ai titoli localizzati), poi per nome+anno.
+      const all = await db.shows.toArray();
+      const hit = all.find((s) => s.tmdbId === r.tmdbId)
+        ?? all.find((s) => sameTitle(s.name, s.premiered?.slice(0, 4), r.name, r.year));
       if (hit) { nav(`/show/${hit.id}`); return; }
     }
     toast('Non lo trovo in libreria 🤔');
