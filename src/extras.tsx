@@ -2,7 +2,7 @@
 // cast, "dove guardarlo", titoli simili. Dati TMDB.
 
 import { useState } from 'react';
-import { db, normTitle, nowIso } from './db';
+import { db, nowIso, sameTitle } from './db';
 import { Poster, nav, toast } from './components';
 import { displayTitle } from './korean';
 import { enrichShow, searchShows, tmShowToLocal } from './tvmaze';
@@ -130,10 +130,11 @@ export function TitleRow({ title, items, subOf, openOnly }: {
   const openInLibrary = async (r: Rec) => {
     if (r.kind === 'movie') {
       const all = await db.movies.toArray();
-      const hit = all.find((m) => m.tmdbId === r.tmdbId) ?? all.find((m) => normTitle(m.name) === normTitle(r.name));
+      const hit = all.find((m) => m.tmdbId === r.tmdbId)
+        ?? all.find((m) => sameTitle(m.name, m.releaseDate?.slice(0, 4), r.name, r.year));
       if (hit) { nav(`/movie/${encodeURIComponent(hit.key)}`); return; }
     } else {
-      const hit = (await db.shows.toArray()).find((s) => normTitle(s.name) === normTitle(r.name));
+      const hit = (await db.shows.toArray()).find((s) => sameTitle(s.name, s.premiered?.slice(0, 4), r.name, r.year));
       if (hit) { nav(`/show/${hit.id}`); return; }
     }
     toast('Non lo trovo in libreria 🤔');

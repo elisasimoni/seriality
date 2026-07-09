@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, normTitle } from '../db';
+import { buildNameYearIndex, db, nameYearMatch } from '../db';
 import { fmtDate } from '../components';
 import {
   personCombinedCredits, personDetails, posterUrl,
@@ -17,9 +17,9 @@ export default function PersonPage({ personId }: { personId: number }) {
   const lib = useLiveQuery(async () => {
     const [shows, movies] = await Promise.all([db.shows.toArray(), db.movies.toArray()]);
     return {
-      showNames: new Set(shows.map((s) => normTitle(s.name))),
+      showIndex: buildNameYearIndex(shows.map((s) => ({ name: s.name, year: s.premiered?.slice(0, 4) }))),
       movieTmdb: new Set(movies.map((m) => m.tmdbId).filter(Boolean)),
-      movieNames: new Set(movies.map((m) => normTitle(m.name))),
+      movieIndex: buildNameYearIndex(movies.map((m) => ({ name: m.name, year: m.releaseDate?.slice(0, 4) }))),
     };
   });
 
@@ -49,8 +49,8 @@ export default function PersonPage({ personId }: { personId: number }) {
     overview: c.character ? `Interpreta ${c.character}` : undefined,
   });
   const inLib = (r: Rec) =>
-    r.kind === 'tv' ? lib?.showNames.has(normTitle(r.name))
-      : lib?.movieTmdb.has(r.tmdbId) || lib?.movieNames.has(normTitle(r.name));
+    r.kind === 'tv' ? !!lib && nameYearMatch(lib.showIndex, r.name, r.year)
+      : lib?.movieTmdb.has(r.tmdbId) || (!!lib && nameYearMatch(lib.movieIndex, r.name, r.year));
 
   const tv = credits.filter((c) => c.media_type === 'tv' && (c.episode_count ?? 99) > 2).map(toRec);
   const movies = credits.filter((c) => c.media_type === 'movie').map(toRec);

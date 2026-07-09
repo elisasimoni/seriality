@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, normTitle, nowIso } from '../db';
+import { buildNameYearIndex, db, nameYearMatch, nowIso } from '../db';
 import { Empty, Poster, nav, toast } from '../components';
 import { displayTitle } from '../korean';
 import { searchShows, tmShowToLocal, enrichShow } from '../tvmaze';
@@ -27,8 +27,8 @@ export default function Discover() {
   const [recsLoading, setRecsLoading] = useState(false);
   const [added, setAdded] = useState<Set<string>>(new Set());
   const followedIds = useLiveQuery(async () => new Set((await db.shows.toArray()).map((s) => s.id)));
-  const showNames = useLiveQuery(async () =>
-    new Set((await db.shows.toArray()).map((s) => normTitle(s.name))));
+  const showIndex = useLiveQuery(async () =>
+    buildNameYearIndex((await db.shows.toArray()).map((s) => ({ name: s.name, year: s.premiered?.slice(0, 4) }))));
   const movieKeys = useLiveQuery(async () => {
     const all = await db.movies.toArray();
     return new Set(all.map((m) => m.tmdbId).filter(Boolean));
@@ -177,7 +177,7 @@ export default function Discover() {
                   const k = `${r.kind}:${r.tmdbId}`;
                   const inLib = added.has(k)
                     || (r.kind === 'movie' && movieKeys?.has(r.tmdbId))
-                    || (r.kind === 'tv' && showNames?.has(normTitle(r.name)));
+                    || (r.kind === 'tv' && !!showIndex && nameYearMatch(showIndex, r.name, r.year));
                   return (
                     <div className="poster-card" key={k} title={r.overview}
                       onClick={() => nav(`/preview/${r.kind}/${r.tmdbId}`)}>
@@ -225,7 +225,8 @@ export default function Discover() {
         : (
           <div className="poster-grid">
             {shows.map((r) => {
-              const followed = followedIds?.has(r.localId) || showNames?.has(normTitle(r.name));
+              const followed = followedIds?.has(r.localId)
+                || (!!showIndex && nameYearMatch(showIndex, r.name, r.premiered?.slice(0, 4)));
               const openPreview = async () => {
                 if (followed) { nav(`/show/${r.localId}`); return; }
                 // risolvi tvdb → tmdb per l'anteprima

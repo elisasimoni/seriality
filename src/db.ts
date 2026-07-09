@@ -33,6 +33,38 @@ export const nowIso = () => new Date().toISOString();
  */
 export const normTitle = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
 
+/**
+ * Indice nome→anni per il fallback "stesso titolo" quando manca un id esterno
+ * (tmdbId/tvdbId). Il solo nome NON basta: titoli generici (es. "Christmas
+ * Carol") sono condivisi da produzioni diverse, quindi serve confrontare
+ * anche l'anno per non far combaciare a caso opere non correlate.
+ */
+export function buildNameYearIndex(items: { name: string; year?: string }[]): Map<string, Set<string>> {
+  const map = new Map<string, Set<string>>();
+  for (const it of items) {
+    const key = normTitle(it.name);
+    if (!map.has(key)) map.set(key, new Set());
+    map.get(key)!.add(it.year ?? '');
+  }
+  return map;
+}
+
+/** Vero se l'indice contiene lo stesso nome con un anno compatibile (±1) o senza dati sufficienti per escluderlo. */
+export function nameYearMatch(index: Map<string, Set<string>>, name: string, year?: string): boolean {
+  const years = index.get(normTitle(name));
+  if (!years) return false;
+  if (!year || years.has('')) return true;
+  for (const y of years) if (y && Math.abs(Number(y) - Number(year)) <= 1) return true;
+  return false;
+}
+
+/** Confronto diretto stesso-titolo tra due elementi (senza indice), stessa tolleranza di nameYearMatch. */
+export function sameTitle(nameA: string, yearA: string | undefined, nameB: string, yearB: string | undefined): boolean {
+  if (normTitle(nameA) !== normTitle(nameB)) return false;
+  if (!yearA || !yearB) return true;
+  return Math.abs(Number(yearA) - Number(yearB)) <= 1;
+}
+
 export async function setEpisodeWatched(ep: Episode, watched: boolean) {
   await db.episodes.update(ep.key, {
     watched: watched ? 1 : 0,

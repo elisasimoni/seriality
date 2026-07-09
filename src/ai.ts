@@ -11,7 +11,7 @@
 // Provider: Google Gemini, chiamato direttamente dal browser (tier gratuito).
 // La chiave sta in localStorage (Impostazioni), mai nel bundle pubblico.
 
-import { db, normTitle } from './db';
+import { buildNameYearIndex, db, nameYearMatch } from './db';
 import {
   discoverMovieRaw, discoverTvRaw, movieGenreMap, posterUrl, searchMovieRaw,
   searchTvRaw, tvGenreMap, type RawMovie, type RawTv,
@@ -265,9 +265,10 @@ export async function recommendShowsAI(userText: string): Promise<AiResult> {
   // e per nome normalizzato (fallback per le serie senza tmdbId salvato)
   const shows = await db.shows.toArray();
   const ownedTmdb = new Set(shows.map((s) => s.tmdbId).filter(Boolean) as number[]);
-  const ownedNames = new Set(shows.map((s) => normTitle(s.name)));
+  const ownedIndex = buildNameYearIndex(shows.map((s) => ({ name: s.name, year: s.premiered?.slice(0, 4) })));
   const isOwned = (c: Candidate) =>
-    ownedTmdb.has(c.id) || ownedNames.has(normTitle(c.title)) || (c.originalTitle && ownedNames.has(normTitle(c.originalTitle)));
+    ownedTmdb.has(c.id) || nameYearMatch(ownedIndex, c.title, c.year ?? undefined)
+      || (!!c.originalTitle && nameYearMatch(ownedIndex, c.originalTitle, c.year ?? undefined));
 
   const fresh = pool.filter((c) => !isOwned(c));
   const candidates = fresh.length >= 5 ? fresh : pool; // se troppo pochi, non svuotare
@@ -351,9 +352,10 @@ export async function recommendMoviesAI(userText: string): Promise<AiResult> {
 
   const movies = await db.movies.toArray();
   const ownedTmdb = new Set(movies.map((m) => m.tmdbId).filter(Boolean) as number[]);
-  const ownedNames = new Set(movies.map((m) => normTitle(m.name)));
+  const ownedIndex = buildNameYearIndex(movies.map((m) => ({ name: m.name, year: m.releaseDate?.slice(0, 4) })));
   const isOwned = (c: Candidate) =>
-    ownedTmdb.has(c.id) || ownedNames.has(normTitle(c.title)) || (c.originalTitle && ownedNames.has(normTitle(c.originalTitle)));
+    ownedTmdb.has(c.id) || nameYearMatch(ownedIndex, c.title, c.year ?? undefined)
+      || (!!c.originalTitle && nameYearMatch(ownedIndex, c.originalTitle, c.year ?? undefined));
 
   const fresh = pool.filter((c) => !isOwned(c));
   const candidates = fresh.length >= 5 ? fresh : pool;
