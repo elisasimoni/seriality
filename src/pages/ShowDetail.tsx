@@ -10,10 +10,10 @@ import type { Episode } from '../types';
 import { enrichShow, tvmazeEpisode } from '../tvmaze';
 import {
   findTvByTvdb, hasTmdb, posterUrl, searchTv, trailerUrl, tvCredits,
-  tvRecommendations, watchProviders,
-  type TmdbCastMember, type WatchProvider,
+  tvRecommendations, tvReviews, watchProviders,
+  type TmdbCastMember, type TmdbReview, type WatchProvider,
 } from '../tmdb';
-import { CastRow, ProvidersRow, TitleRow } from '../extras';
+import { CastRow, CommunityReviews, ProvidersRow, TitleRow } from '../extras';
 import type { Rec } from '../recommend';
 
 interface Extras {
@@ -22,6 +22,7 @@ interface Extras {
   providersLink?: string;
   trailer?: string;
   similar: Rec[];
+  reviews: TmdbReview[];
 }
 
 /** Etichetta countdown per un episodio non ancora uscito. */
@@ -77,11 +78,12 @@ export default function ShowDetail({ id }: { id: number }) {
       }
       if (!tmdbId || cancelled) return;
       if (tmdbId !== show.tmdbId) await db.shows.update(id, { tmdbId });
-      const [cast, prov, trailer, recs] = await Promise.all([
+      const [cast, prov, trailer, recs, reviews] = await Promise.all([
         tvCredits(tmdbId),
         watchProviders('tv', tmdbId),
         trailerUrl('tv', tmdbId),
         tvRecommendations(tmdbId),
+        tvReviews(tmdbId),
       ]);
       if (cancelled) return;
       setExtras({
@@ -93,6 +95,7 @@ export default function ShowDetail({ id }: { id: number }) {
           kind: 'tv', tmdbId: r.id, name: r.name, poster: posterUrl(r.poster_path),
           year: r.first_air_date?.slice(0, 4), vote: r.vote_average, overview: r.overview,
         })),
+        reviews,
       });
     })().catch(() => {});
     return () => { cancelled = true; };
@@ -326,6 +329,7 @@ export default function ShowDetail({ id }: { id: number }) {
       })}
 
       {extras && <TitleRow title="Serie simili" items={extras.similar} />}
+      {extras && <CommunityReviews reviews={extras.reviews} />}
     </>
   );
 }

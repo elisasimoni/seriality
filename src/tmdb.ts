@@ -82,6 +82,41 @@ export async function findTvByTvdb(tvdbId: number): Promise<TmdbTv | null> {
   } catch { return null; }
 }
 
+export interface TmdbReview {
+  id: string;
+  author: string;
+  content: string;
+  rating?: number | null;
+  avatar?: string | null;
+  created_at?: string;
+  url?: string;
+}
+
+/** Recensioni/commenti della community per una serie (a livello di serie, non episodio). */
+export async function tvReviews(tmdbTvId: number): Promise<TmdbReview[]> {
+  try {
+    // Le recensioni sono quasi tutte in inglese: forzo en-US per non avere una lista vuota.
+    const data = (await tmdb(`/tv/${tmdbTvId}/reviews`, { language: 'en-US' })) as {
+      results?: Array<{
+        id: string; author: string; content: string; created_at?: string; url?: string;
+        author_details?: { rating?: number | null; avatar_path?: string | null };
+      }>;
+    };
+    return (data.results ?? []).map((r) => {
+      const a = r.author_details?.avatar_path ?? null;
+      // TMDB annida gli avatar Gravatar con un prefisso '/https://…' da ripulire.
+      const avatar = a
+        ? (a.startsWith('/http') ? a.slice(1) : posterUrl(a, 'w45') ?? null)
+        : null;
+      return {
+        id: r.id, author: r.author, content: r.content,
+        rating: r.author_details?.rating ?? null,
+        avatar, created_at: r.created_at, url: r.url,
+      };
+    });
+  } catch { return []; }
+}
+
 export async function tvRecommendations(tmdbTvId: number): Promise<TmdbTv[]> {
   try {
     const data = (await tmdb(`/tv/${tmdbTvId}/recommendations`)) as { results?: TmdbTv[] };

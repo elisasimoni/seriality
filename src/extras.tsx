@@ -6,7 +6,7 @@ import { db, nowIso, sameTitle } from './db';
 import { Poster, nav, toast } from './components';
 import { displayTitle } from './korean';
 import { enrichShow, searchShows, tmShowToLocal } from './tvmaze';
-import { posterUrl, tvExternalIds, type TmdbCastMember, type WatchProvider } from './tmdb';
+import { posterUrl, tvExternalIds, type TmdbCastMember, type TmdbReview, type WatchProvider } from './tmdb';
 import type { Rec } from './recommend';
 
 /**
@@ -72,6 +72,67 @@ export function CastRow({ cast }: { cast: TmdbCastMember[] }) {
           </div>
         ))}
       </div>
+    </>
+  );
+}
+
+/** Data compatta "gg mmm aaaa" da un ISO, senza dipendenze extra. */
+function reviewDate(iso?: string): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? ''
+    : d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+/**
+ * Commenti della community (recensioni TMDB) sotto una serie che segui.
+ * I testi lunghi si espandono al click. Fonte a livello di serie, non episodio.
+ */
+export function CommunityReviews({ reviews }: { reviews: TmdbReview[] }) {
+  const [open, setOpen] = useState<Set<string>>(new Set());
+  const [showAll, setShowAll] = useState(false);
+  if (!reviews.length) return null;
+
+  const toggle = (id: string) =>
+    setOpen((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+
+  const visible = showAll ? reviews : reviews.slice(0, 3);
+
+  return (
+    <>
+      <h3 className="rec-title">💬 Commenti della community</h3>
+      <div className="reviews">
+        {visible.map((r) => {
+          const isOpen = open.has(r.id);
+          const long = r.content.length > 320;
+          const text = isOpen || !long ? r.content : r.content.slice(0, 320).trimEnd() + '…';
+          return (
+            <div className="review" key={r.id}>
+              <div className="review-head">
+                {r.avatar
+                  ? <img className="review-av" src={r.avatar} alt="" loading="lazy" />
+                  : <div className="review-av ph">{r.author.slice(0, 1).toUpperCase()}</div>}
+                <span className="review-author">{r.author}</span>
+                {r.rating != null && <span className="review-rating">★ {r.rating}/10</span>}
+                <span className="review-date">{reviewDate(r.created_at)}</span>
+              </div>
+              <p className="review-body">{text}</p>
+              {long && (
+                <button className="review-more" onClick={() => toggle(r.id)}>
+                  {isOpen ? 'mostra meno' : 'leggi tutto'}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {reviews.length > 3 && (
+        <button className="btn" style={{ marginTop: 4, padding: '6px 12px', fontSize: 12 }}
+          onClick={() => setShowAll((v) => !v)}>
+          {showAll ? 'mostra meno' : `mostra tutti (${reviews.length})`}
+        </button>
+      )}
     </>
   );
 }
