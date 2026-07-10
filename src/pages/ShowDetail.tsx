@@ -244,7 +244,7 @@ export default function ShowDetail({ id }: { id: number }) {
 
       {extras && (
         <>
-          <ProvidersRow providers={extras.providers} link={extras.providersLink} />
+          <ProvidersRow providers={extras.providers} link={extras.providersLink} title={show.name} />
           <CastRow cast={extras.cast} />
         </>
       )}

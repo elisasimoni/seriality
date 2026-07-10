@@ -137,25 +137,49 @@ export function CommunityReviews({ reviews }: { reviews: TmdbReview[] }) {
   );
 }
 
-export function ProvidersRow({ providers, link }: { providers: WatchProvider[]; link?: string }) {
+// Deep-link diretti al servizio, con ricerca del titolo. TMDB non fornisce link
+// per-provider (dà solo la pagina aggregatore JustWatch), quindi li costruiamo qui.
+const PROVIDER_LINKS: { match: RegExp; url: (q: string) => string }[] = [
+  { match: /netflix/i,                    url: (q) => `https://www.netflix.com/search?q=${q}` },
+  { match: /prime video|amazon/i,         url: (q) => `https://www.primevideo.com/search/?phrase=${q}` },
+  { match: /disney/i,                     url: (q) => `https://www.disneyplus.com/search?q=${q}` },
+  { match: /apple tv/i,                   url: (q) => `https://tv.apple.com/search?term=${q}` },
+  { match: /paramount/i,                  url: (q) => `https://www.paramountplus.com/search/?query=${q}` },
+  { match: /crunchyroll/i,                url: (q) => `https://www.crunchyroll.com/search?q=${q}` },
+  { match: /rai/i,                        url: (q) => `https://www.raiplay.it/ricerca.html?q=${q}` },
+  { match: /mediaset/i,                   url: (q) => `https://mediasetinfinity.mediaset.it/ricerca?q=${q}` },
+  { match: /now/i,                        url: (q) => `https://www.nowtv.it/cerca?q=${q}` },
+  { match: /timvision/i,                  url: (q) => `https://www.timvision.it/cerca?q=${q}` },
+];
+
+/**
+ * URL di destinazione al clic su un provider: prima il deep-link diretto al
+ * servizio (ricerca del titolo), altrimenti la pagina aggregatore di TMDB,
+ * altrimenti una ricerca Google. Così un clic porta *sempre* da qualche parte.
+ */
+function providerUrl(providerName: string, title: string, tmdbLink?: string): string {
+  const q = encodeURIComponent(title);
+  const hit = PROVIDER_LINKS.find((p) => p.match.test(providerName));
+  if (hit) return hit.url(q);
+  if (tmdbLink) return tmdbLink;
+  return `https://www.google.com/search?q=${encodeURIComponent(`${title} ${providerName} streaming`)}`;
+}
+
+export function ProvidersRow({ providers, link, title }: {
+  providers: WatchProvider[]; link?: string; title?: string;
+}) {
   if (!providers.length) return null;
   return (
     <>
       <h3 className="rec-title">Dove guardarlo in streaming (IT)</h3>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         {providers.map((p) => (
-          link ? (
-            <a className="provider" key={p.provider_name} title={p.provider_name}
-              href={link} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
-              {p.logo_path && <img src={posterUrl(p.logo_path, 'w45')} alt="" />}
-              {p.provider_name}
-            </a>
-          ) : (
-            <span className="provider" key={p.provider_name} title={p.provider_name}>
-              {p.logo_path && <img src={posterUrl(p.logo_path, 'w45')} alt="" />}
-              {p.provider_name}
-            </span>
-          )
+          <a className="provider" key={p.provider_name} title={`Cerca su ${p.provider_name}`}
+            href={providerUrl(p.provider_name, title ?? '', link)} target="_blank" rel="noreferrer"
+            style={{ color: 'inherit', textDecoration: 'none' }}>
+            {p.logo_path && <img src={posterUrl(p.logo_path, 'w45')} alt="" />}
+            {p.provider_name}
+          </a>
         ))}
         {link && <a className="btn" style={{ padding: '6px 12px', fontSize: 12 }} href={link} target="_blank" rel="noreferrer">tutte le opzioni ↗</a>}
       </div>

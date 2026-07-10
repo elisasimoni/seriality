@@ -144,7 +144,7 @@ export default function MovieDetail({ movieKey }: { movieKey: string }) {
       {extras === null && hasTmdb() && <p style={{ color: 'var(--text-dim)' }}>Carico cast e dettagli… 🎬</p>}
       {extras && (
         <>
-          <ProvidersRow providers={extras.providers} link={extras.providersLink} />
+          <ProvidersRow providers={extras.providers} link={extras.providersLink} title={movie.name} />
           <CastRow cast={extras.cast} />
           <TitleRow title="Film simili" items={extras.similar} />
         </>

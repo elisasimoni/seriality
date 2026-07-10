@@ -184,7 +184,7 @@ export default function Preview({ kind, tmdbId }: { kind: 'tv' | 'movie'; tmdbId
 
       {extras && (
         <>
-          <ProvidersRow providers={extras.providers} link={extras.providersLink} />
+          <ProvidersRow providers={extras.providers} link={extras.providersLink} title={info.name} />
           <CastRow cast={extras.cast} />
         </>
       )}
