@@ -242,6 +242,8 @@ export default function ShowDetail({ id }: { id: number }) {
 
       {show.overview && <p style={{ color: 'var(--text-dim)', maxWidth: 780, marginTop: 0 }}>{show.overview}</p>}
 
+      {!hasTmdb() && <p style={{ color: 'var(--text-dim)' }}>Aggiungi una chiave TMDB nelle Impostazioni per cast, trailer e streaming.</p>}
+      {extras === null && hasTmdb() && <p style={{ color: 'var(--text-dim)' }}>Carico cast e dettagli… 🎭</p>}
       {extras && (
         <>
           <ProvidersRow providers={extras.providers} link={extras.providersLink} title={show.name} />
