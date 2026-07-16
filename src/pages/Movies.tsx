@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, nowIso } from '../db';
+import { db, isRomance, nowIso } from '../db';
 import { Empty, Poster, Stars, fmtDate, nav, toast } from '../components';
 import { displayTitle } from '../korean';
 import type { Movie } from '../types';
@@ -63,6 +63,7 @@ export default function Movies() {
             <div className="poster-card" key={m.key} onClick={() => nav(`/movie/${encodeURIComponent(m.key)}`)}>
               <Poster src={m.poster} name={m.name} />
               {m.favorite && <div className="fav">❤️</div>}
+              {isRomance(m) && <div className="kiss" title="C'è una storia d'amore">💋</div>}
               <div className="meta">
                 <div className="name" title={m.name}>{displayTitle(m.name)}</div>
                 <div className="sub">

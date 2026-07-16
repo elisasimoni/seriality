@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, nowIso } from '../db';
+import { db, isRomance, nowIso } from '../db';
 import { AdjacentNav, Stars, fmtDate, nav, toast } from '../components';
 import { displayTitle } from '../korean';
 import {
-  hasTmdb, movieCredits, movieDetailsById, movieRecommendations, posterUrl,
+  detectRomance, hasTmdb, movieCredits, movieDetailsById, movieRecommendations, posterUrl,
   searchMovies, trailerUrl, watchProviders,
   type TmdbCastMember, type WatchProvider,
 } from '../tmdb';
@@ -67,6 +67,11 @@ export default function MovieDetail({ movieKey }: { movieKey: string }) {
           });
         }
       }
+      // "C'è una storia d'amore?" una volta sola: generi + keyword TMDB → 💋
+      if (movie.romance === undefined) {
+        const romance = await detectRomance('movie', tmdbId, movie.genres);
+        if (!cancelled) await db.movies.update(movieKey, { romance });
+      }
       const [cast, prov, trailer, recs] = await Promise.all([
         movieCredits(tmdbId),
         watchProviders('movie', tmdbId),
@@ -114,6 +119,7 @@ export default function MovieDetail({ movieKey }: { movieKey: string }) {
               {movie.releaseDate && <span>{movie.releaseDate.slice(0, 4)}</span>}
               {movie.runtime ? <span>{Math.floor(movie.runtime / 60)}h {movie.runtime % 60}min</span> : null}
               {movie.genres?.length ? <span>{movie.genres.slice(0, 3).join(' · ')}</span> : null}
+              {isRomance(movie) && <span title="C'è una storia d'amore">💋 storia d'amore</span>}
             </div>
             <div className="actions">
               <button className={`btn ${movie.watched ? '' : 'primary'}`} onClick={() => void toggleWatched()}>

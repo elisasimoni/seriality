@@ -20,6 +20,7 @@ export interface Show {
   rating?: number;            // voto utente 0-10
   tvmazeId?: number;
   tmdbId?: number;            // per cast/trailer/provider/simili (risolto al primo uso)
+  romance?: boolean;          // c'è una storia d'amore? (generi + keyword TMDB, calcolato una volta)
   enrichedAt?: string;        // ultimo fetch metadata riuscito
   // Import legacy (seen_episode.csv non ha stagione/episodio): numero di
   // visioni da riassegnare in ordine di messa in onda dopo l'enrichment.
@@ -64,6 +65,7 @@ export interface Movie {
   imdbId?: string;
   tvdbId?: number;
   tmdbId?: number;
+  romance?: boolean;          // c'è una storia d'amore? (generi + keyword TMDB, calcolato una volta)
 }
 
 // ---- Risultato normalizzato dell'ingestion (qualsiasi formato TV Time) ----

@@ -165,6 +165,26 @@ export async function movieCredits(tmdbMovieId: number): Promise<TmdbCastMember[
   } catch { return []; }
 }
 
+// Parole-chiave TMDB che segnalano una storia d'amore, anche quando il genere
+// principale è un altro (es. un action con sottotrama romantica).
+const ROMANCE_RE = /\b(romance|romantic|lovers?|love|crush|soulmate|courtship)\b/i;
+
+/**
+ * C'è una componente romantica? Prima guarda i generi già noti (TVmaze ha
+ * "Romance", TMDB film pure), poi — per stanare le sottotrame — le keyword
+ * TMDB del titolo. Pensata per essere calcolata una volta e salvata in libreria.
+ */
+export async function detectRomance(kind: 'tv' | 'movie', id: number, genres?: string[]): Promise<boolean> {
+  if (genres?.some((g) => /roman/i.test(g))) return true;
+  try {
+    const data = (await tmdb(`/${kind}/${id}/keywords`)) as {
+      keywords?: { name: string }[]; results?: { name: string }[];
+    };
+    const names = (data.keywords ?? data.results ?? []).map((k) => k.name);
+    return names.some((n) => ROMANCE_RE.test(n));
+  } catch { return false; }
+}
+
 export interface TmdbPerson {
   id: number; name: string; biography?: string; birthday?: string | null;
   deathday?: string | null; place_of_birth?: string | null;

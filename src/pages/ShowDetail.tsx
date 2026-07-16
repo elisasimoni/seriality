@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import {
-  db, computeProgress, markWatchedBulk, nowIso, previousUnwatched,
+  db, computeProgress, isRomance, markWatchedBulk, nowIso, previousUnwatched,
   setEpisodeWatched, setSeasonWatched,
 } from '../db';
 import { AdjacentNav, Stars, askConfirm, epCode, fmtDate, nav, toast } from '../components';
@@ -9,7 +9,7 @@ import { displayTitle } from '../korean';
 import type { Episode } from '../types';
 import { enrichShow, tvmazeEpisode } from '../tvmaze';
 import {
-  findTvByTvdb, hasTmdb, posterUrl, searchTv, trailerUrl, tvCredits,
+  detectRomance, findTvByTvdb, hasTmdb, posterUrl, searchTv, trailerUrl, tvCredits,
   tvRecommendations, tvReviews, watchProviders,
   type TmdbCastMember, type TmdbReview, type WatchProvider,
 } from '../tmdb';
@@ -78,6 +78,11 @@ export default function ShowDetail({ id }: { id: number }) {
       }
       if (!tmdbId || cancelled) return;
       if (tmdbId !== show.tmdbId) await db.shows.update(id, { tmdbId });
+      // "C'è una storia d'amore?" una volta sola: generi + keyword TMDB → 💋
+      if (show.romance === undefined) {
+        const romance = await detectRomance('tv', tmdbId, show.genres);
+        if (!cancelled) await db.shows.update(id, { romance });
+      }
       const [cast, prov, trailer, recs, reviews] = await Promise.all([
         tvCredits(tmdbId),
         watchProviders('tv', tmdbId),
@@ -185,6 +190,7 @@ export default function ShowDetail({ id }: { id: number }) {
               {show.network && <span>{show.network}{show.country ? ` (${show.country})` : ''}</span>}
               {show.premiered && <span>dal {show.premiered.slice(0, 4)}</span>}
               {show.genres?.length ? <span>{show.genres.slice(0, 3).join(' · ')}</span> : null}
+              {isRomance(show) && <span title="C'è una storia d'amore">💋 storia d'amore</span>}
               <span>{prog.watched}/{prog.total} episodi visti</span>
               {nextAiring && daysTo != null && (
                 <span style={{ color: 'var(--gold)' }}>

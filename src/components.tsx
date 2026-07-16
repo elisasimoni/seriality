@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Show } from './types';
-import type { ShowProgress } from './db';
+import { isRomance, type ShowProgress } from './db';
 import { displayTitle } from './korean';
 
 export function nav(to: string) {
@@ -174,6 +174,7 @@ export function ShowCard({ show, progress, sub }: { show: Show; progress?: ShowP
     <div className="poster-card" onClick={() => nav(`/show/${show.id}`)}>
       <Poster src={show.poster} name={show.name} />
       {show.favorite && <div className="fav">❤️</div>}
+      {isRomance(show) && <div className="kiss" title="C'è una storia d'amore">💋</div>}
       <div className="meta">
         <div className="name">{displayTitle(show.name)}</div>
         <div className="sub">

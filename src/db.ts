@@ -26,6 +26,15 @@ export const epKey = (showId: number, season: number, number: number) =>
 export const nowIso = () => new Date().toISOString();
 
 /**
+ * C'è una storia d'amore? Usa il flag `romance` salvato (calcolato da generi +
+ * keyword TMDB quando si apre la scheda) e, come ripiego immediato prima che sia
+ * stato calcolato, i generi già noti — così il 💋 appare subito sui titoli già
+ * marcati "Romance" da TVmaze/TMDB, senza aspettare una fetch.
+ */
+export const isRomance = (x: { romance?: boolean; genres?: string[] }): boolean =>
+  x.romance ?? (x.genres?.some((g) => /roman/i.test(g)) ?? false);
+
+/**
  * Normalizza un titolo per il confronto "stesso show/film" tra fonti diverse.
  * Usa \p{L}/\p{N} (non a-z0-9) perché molti titoli sono in coreano/giapponese/ecc.:
  * scartare tutto ciò che non è ASCII collasserebbe titoli non latini diversi

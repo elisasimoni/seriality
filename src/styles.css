@@ -129,6 +129,7 @@ img { max-width: 100%; }
 .poster-card .name { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poster-card .sub { font-size: 11.5px; color: var(--text-dim); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poster-card .fav { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.55); border-radius: 50%; padding: 4px 6px; font-size: 12px; backdrop-filter: blur(4px); }
+.poster-card .kiss { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.55); border-radius: 50%; padding: 4px 6px; font-size: 12px; backdrop-filter: blur(4px); }
 
 .progress { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin-top: 8px; }
 .progress > div { height: 100%; background: var(--grad); border-radius: 2px; transition: width 0.3s; }
