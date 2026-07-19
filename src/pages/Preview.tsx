@@ -3,7 +3,7 @@
 // streaming, trailer, stagioni con sinossi episodi — e da qui si può seguire.
 
 import { useEffect, useState } from 'react';
-import { db, nowIso } from '../db';
+import { db, findLibMovie, findLibShow, nowIso } from '../db';
 import { Poster, epCode, fmtDate, nav, toast } from '../components';
 import { displayTitle } from '../korean';
 import {
@@ -69,11 +69,11 @@ export default function Preview({ kind, tmdbId }: { kind: 'tv' | 'movie'; tmdbId
           ].filter(Boolean),
           seasons: (d.seasons ?? []).filter((s) => s.season_number > 0 && s.episode_count > 0),
         });
-        // già in libreria? (via id TVDB)
+        // già in libreria? via id TVDB, con fallback tmdbId/titolo+anno per le voci importate
         const ext = await tvExternalIds(tmdbId);
-        if (ext.tvdb_id && (await db.shows.get(ext.tvdb_id)) && !cancelled) {
-          setLibTarget(`/show/${ext.tvdb_id}`);
-        }
+        const hit = (ext.tvdb_id ? await db.shows.get(ext.tvdb_id) : undefined)
+          ?? (await findLibShow(tmdbId, d.name, d.first_air_date?.slice(0, 4)));
+        if (hit && !cancelled) setLibTarget(`/show/${hit.id}`);
         const [cast, prov, trailer, recs] = await Promise.all([
           tvCredits(tmdbId), watchProviders('tv', tmdbId), trailerUrl('tv', tmdbId), tvRecommendations(tmdbId),
         ]);
@@ -100,7 +100,7 @@ export default function Preview({ kind, tmdbId }: { kind: 'tv' | 'movie'; tmdbId
             d.vote_average ? `★ ${d.vote_average.toFixed(1)}` : '',
           ].filter(Boolean),
         });
-        const inLib = (await db.movies.toArray()).find((m) => m.tmdbId === tmdbId);
+        const inLib = await findLibMovie(tmdbId, d.title, d.release_date?.slice(0, 4));
         if (inLib && !cancelled) setLibTarget(`/movie/${encodeURIComponent(inLib.key)}`);
         const [cast, prov, trailer, recs] = await Promise.all([
           movieCredits(tmdbId), watchProviders('movie', tmdbId), trailerUrl('movie', tmdbId), movieRecommendations(tmdbId),

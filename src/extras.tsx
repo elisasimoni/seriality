@@ -2,7 +2,8 @@
 // cast, "dove guardarlo", titoli simili. Dati TMDB.
 
 import { useState } from 'react';
-import { db, nowIso, sameTitle } from './db';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { buildLibIndex, db, findLibMovie, findLibShow, inLibrary, nowIso } from './db';
 import { Poster, nav, toast } from './components';
 import { displayTitle } from './korean';
 import { enrichShow, searchShows, tmShowToLocal } from './tvmaze';
@@ -14,6 +15,12 @@ import type { Rec } from './recommend';
  * Seriality), la crea se manca e avvia l'enrichment. Ritorna l'id locale.
  */
 export async function followTvByTmdb(r: Rec): Promise<number | undefined> {
+  // Se c'è già (anche importata, con id diverso o senza tmdbId) non creare un doppione.
+  const already = await findLibShow(r.tmdbId, r.name, r.year);
+  if (already) {
+    if (!already.tmdbId) await db.shows.update(already.id, { tmdbId: r.tmdbId });
+    return already.id;
+  }
   const ext = await tvExternalIds(r.tmdbId);
   let localId = ext.tvdb_id ?? undefined;
   if (!localId) {
@@ -39,10 +46,10 @@ export async function followTvByTmdb(r: Rec): Promise<number | undefined> {
 /** Aggiunge (o aggiorna) un film in libreria a partire da un consiglio TMDB. */
 export async function addMovieByTmdb(r: Rec, watched: boolean): Promise<string> {
   const key = `tmdb:${r.tmdbId}`;
-  const existing = (await db.movies.get(key))
-    ?? (await db.movies.toArray()).find((m) => m.tmdbId === r.tmdbId);
+  const existing = (await db.movies.get(key)) ?? (await findLibMovie(r.tmdbId, r.name, r.year));
   if (existing) {
     await db.movies.update(existing.key, {
+      tmdbId: existing.tmdbId ?? r.tmdbId,
       watched: watched ? 1 : existing.watched,
       watchedAt: watched ? nowIso() : existing.watchedAt,
     });
@@ -196,6 +203,7 @@ export function TitleRow({ title, items, subOf, openOnly }: {
   openOnly?: boolean;
 }) {
   const [added, setAdded] = useState<Set<string>>(new Set());
+  const libIndex = useLiveQuery(buildLibIndex);
   if (!items.length) return null;
 
   const followTv = async (r: Rec) => {
@@ -214,15 +222,10 @@ export function TitleRow({ title, items, subOf, openOnly }: {
 
   const openInLibrary = async (r: Rec) => {
     if (r.kind === 'movie') {
-      const all = await db.movies.toArray();
-      const hit = all.find((m) => m.tmdbId === r.tmdbId)
-        ?? all.find((m) => sameTitle(m.name, m.releaseDate?.slice(0, 4), r.name, r.year));
+      const hit = await findLibMovie(r.tmdbId, r.name, r.year);
       if (hit) { nav(`/movie/${encodeURIComponent(hit.key)}`); return; }
     } else {
-      // Prima per id TMDB (robusto ai titoli localizzati), poi per nome+anno.
-      const all = await db.shows.toArray();
-      const hit = all.find((s) => s.tmdbId === r.tmdbId)
-        ?? all.find((s) => sameTitle(s.name, s.premiered?.slice(0, 4), r.name, r.year));
+      const hit = await findLibShow(r.tmdbId, r.name, r.year);
       if (hit) { nav(`/show/${hit.id}`); return; }
     }
     toast('Non lo trovo in libreria 🤔');
@@ -235,6 +238,7 @@ export function TitleRow({ title, items, subOf, openOnly }: {
         {items.map((r) => {
           const k = `${r.kind}:${r.tmdbId}`;
           const isAdded = added.has(k);
+          const inLib = !openOnly && inLibrary(libIndex, r.kind, r.tmdbId, r.name, r.year);
           return (
             <div
               className="poster-card" key={k} title={r.overview}
@@ -251,6 +255,9 @@ export function TitleRow({ title, items, subOf, openOnly }: {
                     onClick={(e) => { e.stopPropagation(); void openInLibrary(r); }}>Apri →</button>
                 ) : isAdded ? (
                   <button className="btn" disabled style={{ width: '100%', marginTop: 8, justifyContent: 'center', padding: '6px 0' }}>✓</button>
+                ) : inLib ? (
+                  <button className="btn" style={{ width: '100%', marginTop: 8, justifyContent: 'center', padding: '6px 0' }}
+                    onClick={(e) => { e.stopPropagation(); void openInLibrary(r); }}>✓ In libreria</button>
                 ) : r.kind === 'tv' ? (
                   <button className="btn primary" style={{ width: '100%', marginTop: 8, justifyContent: 'center', padding: '6px 0' }}
                     onClick={(e) => { e.stopPropagation(); void followTv(r); }}>➕ Segui</button>

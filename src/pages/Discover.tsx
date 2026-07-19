@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { buildNameYearIndex, db, nameYearMatch, nowIso } from '../db';
+import { buildLibIndex, db, findLibMovie, inLibrary, nameYearMatch, nowIso } from '../db';
 import { Empty, Poster, nav, toast } from '../components';
 import { displayTitle } from '../korean';
 import { searchShows, tmShowToLocal, enrichShow } from '../tvmaze';
@@ -27,12 +27,7 @@ export default function Discover() {
   const [recsLoading, setRecsLoading] = useState(false);
   const [added, setAdded] = useState<Set<string>>(new Set());
   const followedIds = useLiveQuery(async () => new Set((await db.shows.toArray()).map((s) => s.id)));
-  const showIndex = useLiveQuery(async () =>
-    buildNameYearIndex((await db.shows.toArray()).map((s) => ({ name: s.name, year: s.premiered?.slice(0, 4) }))));
-  const movieKeys = useLiveQuery(async () => {
-    const all = await db.movies.toArray();
-    return new Set(all.map((m) => m.tmdbId).filter(Boolean));
-  });
+  const libIndex = useLiveQuery(buildLibIndex);
 
   const loadRecs = async (force = false) => {
     if (!hasTmdb()) return;
@@ -111,13 +106,17 @@ export default function Discover() {
   };
 
   const addMovie = async (r: MovieResult, watched: boolean) => {
-    const key = `tmdb:${r.tmdbId}`;
-    const existing = await db.movies.get(key);
+    // Cerca anche per titolo+anno: un film importato senza tmdbId non deve diventare un doppione.
+    const existing = await findLibMovie(r.tmdbId, r.name, r.year);
     if (existing) {
-      await db.movies.update(key, { watched: watched ? 1 : existing.watched, watchedAt: watched ? nowIso() : existing.watchedAt });
+      await db.movies.update(existing.key, {
+        tmdbId: existing.tmdbId ?? r.tmdbId,
+        watched: watched ? 1 : existing.watched,
+        watchedAt: watched ? nowIso() : existing.watchedAt,
+      });
     } else {
       await db.movies.put({
-        key, name: r.name, tmdbId: r.tmdbId, poster: r.poster, overview: r.overview,
+        key: `tmdb:${r.tmdbId}`, name: r.name, tmdbId: r.tmdbId, poster: r.poster, overview: r.overview,
         releaseDate: r.year ? `${r.year}-01-01` : undefined,
         watched: watched ? 1 : 0, watchedAt: watched ? nowIso() : undefined, followedAt: nowIso(),
       });
@@ -175,9 +174,7 @@ export default function Discover() {
               <div className="rec-row">
                 {sec.items.map((r) => {
                   const k = `${r.kind}:${r.tmdbId}`;
-                  const inLib = added.has(k)
-                    || (r.kind === 'movie' && movieKeys?.has(r.tmdbId))
-                    || (r.kind === 'tv' && !!showIndex && nameYearMatch(showIndex, r.name, r.year));
+                  const inLib = added.has(k) || inLibrary(libIndex, r.kind, r.tmdbId, r.name, r.year);
                   return (
                     <div className="poster-card" key={k} title={r.overview}
                       onClick={() => nav(`/preview/${r.kind}/${r.tmdbId}`)}>
@@ -226,7 +223,7 @@ export default function Discover() {
           <div className="poster-grid">
             {shows.map((r) => {
               const followed = followedIds?.has(r.localId)
-                || (!!showIndex && nameYearMatch(showIndex, r.name, r.premiered?.slice(0, 4)));
+                || (!!libIndex && nameYearMatch(libIndex.tvNames, r.name, r.premiered?.slice(0, 4)));
               const openPreview = async () => {
                 if (followed) { nav(`/show/${r.localId}`); return; }
                 // risolvi tvdb → tmdb per l'anteprima
@@ -261,19 +258,23 @@ export default function Discover() {
         : (
           <div className="poster-grid">
             {movies.map((r) => {
-              const inLib = movieKeys?.has(r.tmdbId);
+              const inLib = inLibrary(libIndex, 'movie', r.tmdbId, r.name, r.year);
               return (
                 <div className="poster-card" key={r.tmdbId} onClick={() => nav(`/preview/movie/${r.tmdbId}`)}>
                   <Poster src={r.poster} name={r.name} />
                   <div className="meta">
                     <div className="name">{displayTitle(r.name)}</div>
-                    <div className="sub">{r.year ?? ''}{inLib ? ' · in libreria ✓' : ''}</div>
-                    <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                      <button className="btn primary" style={{ flex: 1, justifyContent: 'center', padding: '7px 0' }}
-                        onClick={(e) => { e.stopPropagation(); void addMovie(r, false); }}>➕</button>
-                      <button className="btn" style={{ flex: 1, justifyContent: 'center', padding: '7px 0' }}
-                        title="Già visto" onClick={(e) => { e.stopPropagation(); void addMovie(r, true); }}>✓ Visto</button>
-                    </div>
+                    <div className="sub">{r.year ?? ''}</div>
+                    {inLib ? (
+                      <button className="btn" disabled style={{ width: '100%', marginTop: 8, justifyContent: 'center', padding: '7px 0' }}>✓ In libreria</button>
+                    ) : (
+                      <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                        <button className="btn primary" style={{ flex: 1, justifyContent: 'center', padding: '7px 0' }}
+                          onClick={(e) => { e.stopPropagation(); void addMovie(r, false); }}>➕</button>
+                        <button className="btn" style={{ flex: 1, justifyContent: 'center', padding: '7px 0' }}
+                          title="Già visto" onClick={(e) => { e.stopPropagation(); void addMovie(r, true); }}>✓ Visto</button>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

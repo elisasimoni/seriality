@@ -65,6 +65,54 @@ export function sameTitle(nameA: string, yearA: string | undefined, nameB: strin
   return Math.abs(Number(yearA) - Number(yearB)) <= 1;
 }
 
+/**
+ * Indice "già in libreria" per le card di ricerca/consigli: id TMDB quando c'è,
+ * più il fallback titolo+anno perché le voci importate (TV Time ecc.) spesso
+ * non hanno tmdbId e senza fallback tornerebbero a mostrare "➕".
+ */
+export interface LibIndex {
+  tvTmdb: Set<number>;
+  tvNames: Map<string, Set<string>>;
+  movieTmdb: Set<number>;
+  movieNames: Map<string, Set<string>>;
+}
+
+export function buildLibIndexFrom(shows: Show[], movies: Movie[]): LibIndex {
+  return {
+    tvTmdb: new Set(shows.map((s) => s.tmdbId).filter((x): x is number => !!x)),
+    tvNames: buildNameYearIndex(shows.map((s) => ({ name: s.name, year: s.premiered?.slice(0, 4) }))),
+    movieTmdb: new Set(movies.map((m) => m.tmdbId).filter((x): x is number => !!x)),
+    movieNames: buildNameYearIndex(movies.map((m) => ({ name: m.name, year: m.releaseDate?.slice(0, 4) }))),
+  };
+}
+
+export async function buildLibIndex(): Promise<LibIndex> {
+  const [shows, movies] = await Promise.all([db.shows.toArray(), db.movies.toArray()]);
+  return buildLibIndexFrom(shows, movies);
+}
+
+/** Vero se un titolo TMDB risulta già in libreria (per id o per nome+anno). */
+export function inLibrary(ix: LibIndex | undefined, kind: 'tv' | 'movie', tmdbId: number, name: string, year?: string): boolean {
+  if (!ix) return false;
+  return kind === 'tv'
+    ? ix.tvTmdb.has(tmdbId) || nameYearMatch(ix.tvNames, name, year)
+    : ix.movieTmdb.has(tmdbId) || nameYearMatch(ix.movieNames, name, year);
+}
+
+/** Cerca un film già in libreria: prima per tmdbId, poi per titolo+anno (voci importate senza id). */
+export async function findLibMovie(tmdbId: number | undefined, name: string, year?: string): Promise<Movie | undefined> {
+  const all = await db.movies.toArray();
+  return (tmdbId ? all.find((m) => m.tmdbId === tmdbId) : undefined)
+    ?? all.find((m) => sameTitle(m.name, m.releaseDate?.slice(0, 4), name, year));
+}
+
+/** Cerca una serie già in libreria: prima per tmdbId, poi per titolo+anno. */
+export async function findLibShow(tmdbId: number | undefined, name: string, year?: string): Promise<Show | undefined> {
+  const all = await db.shows.toArray();
+  return (tmdbId ? all.find((s) => s.tmdbId === tmdbId) : undefined)
+    ?? all.find((s) => sameTitle(s.name, s.premiered?.slice(0, 4), name, year));
+}
+
 export async function setEpisodeWatched(ep: Episode, watched: boolean) {
   await db.episodes.update(ep.key, {
     watched: watched ? 1 : 0,
