@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
+    "predeploy": "test -n \"$VITE_TMDB_KEY\" || grep -qs '^VITE_TMDB_KEY=.' .env.local || { echo '❌ VITE_TMDB_KEY mancante (.env.local): la build uscirebbe senza chiave TMDB (niente cast/streaming/simili). Deploy annullato.'; exit 1; }",
     "deploy": "npm run build && cd dist && touch .nojekyll && git init -q && git checkout -qb gh-pages && git add -A && git commit -qm deploy && git push -qf https://github.com/elisasimoni/seriality.git gh-pages && cd .. && rm -rf dist/.git && echo '✅ deploy su https://elisasimoni.github.io/seriality/'"
   },
   "dependencies": {
