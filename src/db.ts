@@ -219,3 +219,37 @@ export async function exportBackup(): Promise<string> {
 export async function wipeAll() {
   await Promise.all([db.shows.clear(), db.episodes.clear(), db.movies.clear()]);
 }
+
+/** Ogni quanti giorni l'app ricorda di scaricare una copia locale. */
+export const BACKUP_EVERY_DAYS = 7;
+
+/** Scarica il backup come file e registra la data (usato dal banner e dalle Impostazioni). */
+export async function downloadLocalBackup() {
+  const blob = new Blob([await exportBackup()], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `seriality-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  await db.kv.put({ key: 'localBackupAt', value: nowIso() });
+}
+
+export const lastLocalBackup = async () =>
+  (await db.kv.get('localBackupAt'))?.value as string | undefined;
+
+/**
+ * Vero se è ora di ricordare il backup locale: archivio non vuoto, ultima copia
+ * più vecchia di BACKUP_EVERY_DAYS (o mai fatta) e promemoria non rimandato.
+ */
+export async function backupDue(): Promise<boolean> {
+  if ((await db.shows.count()) + (await db.movies.count()) === 0) return false;
+  const snooze = (await db.kv.get('backupSnoozeUntil'))?.value as string | undefined;
+  if (snooze && new Date(snooze).getTime() > Date.now()) return false;
+  const last = await lastLocalBackup();
+  if (!last) return true;
+  return Date.now() - new Date(last).getTime() > BACKUP_EVERY_DAYS * 86400_000;
+}
+
+/** Rimanda il promemoria di un giorno. */
+export const snoozeBackup = () =>
+  db.kv.put({ key: 'backupSnoozeUntil', value: new Date(Date.now() + 86400_000).toISOString() });

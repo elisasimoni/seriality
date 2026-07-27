@@ -482,3 +482,20 @@ input:focus { border-color: var(--accent); }
   .ep-row .date { display: none; }
   .bar-row .lbl { width: 90px; font-size: 11.5px; }
 }
+
+/* Promemoria backup: in cima al contenuto, non copre la navigazione */
+.backup-banner {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  background: rgba(255, 209, 102, 0.09);
+  border: 1px solid rgba(255, 209, 102, 0.35);
+  border-radius: var(--radius);
+  padding: 14px 18px; margin-bottom: 22px;
+}
+.backup-banner .bb-ico { font-size: 26px; }
+.backup-banner .bb-txt { flex: 1; min-width: 200px; display: flex; flex-direction: column; }
+.backup-banner .bb-txt b { color: var(--gold); }
+.backup-banner .bb-txt span { color: var(--text-dim); font-size: 13px; }
+@media (max-width: 720px) {
+  .backup-banner { padding: 12px 14px; gap: 10px; }
+  .backup-banner .bb-txt { min-width: 100%; order: -1; }
+}

@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { db, exportBackup, wipeAll } from '../db';
-import { toast } from '../components';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { BACKUP_EVERY_DAYS, db, downloadLocalBackup, lastLocalBackup, wipeAll } from '../db';
+import CloudBackup from '../CloudBackup';
+import { fmtDate, toast } from '../components';
 import { enrichAll } from '../tvmaze';
 import { enrichMovies, hasTmdb } from '../tmdb';
 import { hasGemini } from '../ai';
@@ -18,30 +20,36 @@ export default function Settings() {
   const [busy, setBusy] = useState(false);
   const [, setTick] = useState(0); // forza re-render dopo salvataggio chiavi
 
+  const lastBackup = useLiveQuery(lastLocalBackup, []);
+
   const download = async () => {
     setBusy(true);
-    const json = await exportBackup();
-    const blob = new Blob([json], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `seriality-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    setBusy(false);
-    toast('Backup scaricato 💾');
+    try {
+      await downloadLocalBackup();
+      toast('Backup scaricato 💾');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
     <>
       <h1 className="page-title">Impostazioni</h1>
-      <p className="page-sub">I tuoi dati vivono solo qui, nel browser. Niente account, niente cloud.</p>
+      <p className="page-sub">I tuoi dati vivono in questo browser. Il backup li mette al sicuro altrove.</p>
 
-      <h2 className="section-title">💾 Backup</h2>
+      <h2 className="section-title">💾 Backup sul telefono</h2>
       <p style={{ color: 'var(--text-dim)' }}>
         Scarica tutto il tuo archivio come JSON. Puoi ricaricarlo dalla pagina Importa
         (anche su un altro computer): è il tuo salvataggio, per sempre.
+        Te lo ricordo ogni {BACKUP_EVERY_DAYS} giorni con un avviso in cima alla pagina.
       </p>
       <button className="btn primary" disabled={busy} onClick={() => void download()}>⬇️ Scarica backup completo</button>
+      <p style={{ color: 'var(--text-dim)', fontSize: 13, marginTop: 10 }}>
+        Ultimo scaricato: <b>{lastBackup ? `${fmtDate(lastBackup.slice(0, 10))}, ore ${lastBackup.slice(11, 16)}` : 'mai'}</b>
+      </p>
+
+      <h2 className="section-title">☁️ Backup automatico (cifrato)</h2>
+      <CloudBackup />
 
       <h2 className="section-title">🔄 Aggiornamenti</h2>
       <p style={{ color: 'var(--text-dim)' }}>

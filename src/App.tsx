@@ -12,6 +12,8 @@ import MovieDetail from './pages/MovieDetail';
 import PersonPage from './pages/PersonPage';
 import Preview from './pages/Preview';
 import { LockScreen, lockActive } from './lock';
+import BackupBanner from './BackupBanner';
+import { autoSync } from './cloud';
 import Stats from './pages/Stats';
 import ImportPage from './pages/ImportPage';
 import Discover from './pages/Discover';
@@ -66,6 +68,14 @@ export default function App() {
     return () => clearInterval(t);
   }, []);
 
+  // Backup cloud: 20s dopo l'avvio (per non litigare con l'aggiornamento serie)
+  // e poi ogni 15 minuti. Carica solo se qualcosa è cambiato; vedi cloud.ts.
+  useEffect(() => {
+    const first = setTimeout(() => void autoSync(), 20_000);
+    const t = setInterval(() => void autoSync(), 15 * 60 * 1000);
+    return () => { clearTimeout(first); clearInterval(t); };
+  }, []);
+
   if (locked) return <LockScreen onUnlock={() => setLocked(false)} />;
 
   let page: React.ReactNode;
@@ -118,7 +128,7 @@ export default function App() {
           </div>
         )}
       </aside>
-      <main className="main">{page}</main>
+      <main className="main"><BackupBanner />{page}</main>
       <nav className="bottom-nav">
         {BOTTOM.map((n) => {
           const Ico = NAV_ICONS[n.icon!];
