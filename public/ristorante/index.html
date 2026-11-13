@@ -8,15 +8,17 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Ristorante">
 <title>Ristorante · cose da fare</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 :root {
   --bg: #faf6f1; --card: #fff; --ink: #2b2420; --muted: #8a7d74; --line: #eadfd5;
-  --accent: #b4532a; --accent-ink: #fff; --ok: #3d8b5a; --ok-bg: #e9f4ec; --danger: #b3372f;
+  --accent: #b4532a; --accent-ink: #fff; --ok: #3d8b5a; --danger: #b3372f; --chip: #f3ebe3;
 }
 @media (prefers-color-scheme: dark) {
   :root { --bg: #1b1715; --card: #26201d; --ink: #f1e9e2; --muted: #a2948a; --line: #3a312c;
-    --accent: #e0835a; --accent-ink: #1b1715; --ok: #6cc08b; --ok-bg: #23352a; --danger: #ef7d74; }
+    --accent: #e0835a; --accent-ink: #1b1715; --ok: #6cc08b; --danger: #ef7d74; --chip: #332a25; }
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; }
@@ -24,6 +26,7 @@ body { background: var(--bg); color: var(--ink); font: 16px/1.4 system-ui, -appl
   padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
+a { color: var(--accent); }
 [hidden] { display: none !important; }
 .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px; }
 
@@ -33,11 +36,18 @@ header { position: sticky; top: 0; z-index: 5; background: var(--bg); padding-to
 .who { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 12px; font-size: 14px; }
 .sync { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); flex: none; }
 .sync.off { background: var(--danger); }
-.tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
-.tabs::-webkit-scrollbar { display: none; }
+.tabs, .filters { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+.tabs::-webkit-scrollbar, .filters::-webkit-scrollbar { display: none; }
 .tab { flex: none; border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 7px 13px; font-size: 14px; white-space: nowrap; }
 .tab.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
 .tab small { opacity: .8; margin-left: 4px; }
+.filters .tab { padding: 5px 11px; font-size: 13px; background: none; }
+.filters .tab.on { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+
+.notice { margin: 14px 0 0; padding: 12px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; font-size: 14px; display: flex; gap: 10px; align-items: center; }
+.notice span { flex: 1; }
+.notice .btn { padding: 8px 12px; font-size: 14px; }
+.x { border: 0; background: none; color: var(--muted); font-size: 18px; padding: 4px; }
 
 .progress { margin: 14px 0 4px; }
 .progress .row { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); margin-bottom: 6px; }
@@ -46,16 +56,22 @@ header { position: sticky; top: 0; z-index: 5; background: var(--bg); padding-to
 
 h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 20px 0 8px; display: flex; justify-content: space-between; }
 .list { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
-.item { display: flex; align-items: center; gap: 12px; padding: 12px 10px 12px 14px; border-top: 1px solid var(--line); }
+.item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 10px 12px 14px; border-top: 1px solid var(--line); }
 .item:first-child { border-top: 0; }
 .check { flex: none; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--muted); background: none; display: grid; place-items: center; padding: 0; color: transparent; font-size: 16px; font-weight: 700; }
 .item.done .check { background: var(--ok); border-color: var(--ok); color: #fff; }
-.body { flex: 1; min-width: 0; }
+.body { flex: 1; min-width: 0; padding-top: 2px; }
 .title { overflow-wrap: anywhere; }
 .item.done .title { color: var(--muted); text-decoration: line-through; }
-.meta { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.meta { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; margin-top: 2px; }
 .item.done .meta.by { color: var(--ok); }
-.edit { flex: none; border: 0; background: none; color: var(--muted); padding: 8px; font-size: 18px; line-height: 1; }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.chip { font-size: 12px; background: var(--chip); border-radius: 99px; padding: 2px 9px; white-space: nowrap; text-decoration: none; color: var(--ink); max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.chip.me { background: var(--accent); color: var(--accent-ink); }
+.chip.late { background: var(--danger); color: #fff; }
+a.chip { color: var(--accent); font-weight: 600; }
+.edit { flex: none; border: 0; background: none; color: var(--muted); padding: 6px 8px; font-size: 18px; line-height: 1; }
+.warn { flex: none; width: 28px; text-align: center; }
 .empty { text-align: center; color: var(--muted); padding: 40px 10px; }
 .linkbtn { border: 0; background: none; color: var(--accent); padding: 0; font-size: 13px; text-transform: none; letter-spacing: 0; }
 
@@ -67,10 +83,10 @@ h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: v
 .btn.danger { background: none; color: var(--danger); border: 1px solid var(--line); font-weight: 400; }
 .btn:disabled { opacity: .5; }
 label { display: block; font-size: 13px; color: var(--muted); margin: 14px 0 5px; }
-input[type=text], input[type=password], select, textarea { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); }
+input[type=text], input[type=password], input[type=url], input[type=date], select, textarea { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); min-height: 48px; }
 textarea { resize: vertical; min-height: 64px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .seg { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 6px; }
-.warn { flex: none; width: 28px; text-align: center; }
 .seg button { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 10px 2px; font-size: 14px; }
 .seg button.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
 
@@ -82,8 +98,9 @@ textarea { resize: vertical; min-height: 64px; }
 .gate label, .gate input { text-align: left; }
 .gate .btn { width: 100%; margin-top: 18px; }
 .err { color: var(--danger); font-size: 14px; min-height: 20px; margin-top: 10px; }
+.hint { font-size: 13px; color: var(--muted); margin-top: 8px; }
 
-dialog { border: 0; padding: 0; background: var(--card); color: var(--ink); width: 100%; max-width: 640px; margin: auto auto 0; border-radius: 18px 18px 0 0; max-height: 92dvh; }
+dialog { border: 0; padding: 0; background: var(--card); color: var(--ink); width: 100%; max-width: 640px; margin: auto auto 0; border-radius: 18px 18px 0 0; max-height: 92dvh; overflow-y: auto; }
 dialog::backdrop { background: rgba(0,0,0,.45); }
 dialog form { padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); }
 dialog h3 { margin: 0; font-size: 18px; }
@@ -125,6 +142,7 @@ dialog h3 { margin: 0; font-size: 18px; }
         <button class="who" id="whoBtn"></button>
       </div>
       <nav class="tabs" id="tabs"></nav>
+      <div class="filters" id="filters"></div>
     </div>
   </header>
   <main class="wrap" id="main"></main>
@@ -136,13 +154,34 @@ dialog h3 { margin: 0; font-size: 18px; }
     <h3 id="tTitleH">Nuova attività</h3>
     <label for="tTitle">Cosa c'è da fare</label>
     <input type="text" id="tTitle" maxlength="200" required>
-    <label for="tArea">Zona</label>
-    <input type="text" id="tArea" maxlength="40" list="areas" required>
-    <datalist id="areas"></datalist>
     <label>Tipo</label>
     <div class="seg" id="tFreq"></div>
-    <label for="tNote">Nota (facoltativa)</label>
-    <textarea id="tNote" maxlength="500"></textarea>
+    <div class="two">
+      <div>
+        <label for="tZone">Area</label>
+        <input type="text" id="tZone" maxlength="40" list="zones" placeholder="Cucina, Sala…">
+        <datalist id="zones"></datalist>
+      </div>
+      <div>
+        <label for="tArea">Gruppo</label>
+        <input type="text" id="tArea" maxlength="40" list="areas" required placeholder="es. Acquisti">
+        <datalist id="areas"></datalist>
+      </div>
+    </div>
+    <div class="two" id="tWhoWhen">
+      <div>
+        <label for="tAssignee">Assegna a</label>
+        <select id="tAssignee"></select>
+      </div>
+      <div id="tDueBox">
+        <label for="tDue">Scadenza</label>
+        <input type="date" id="tDue">
+      </div>
+    </div>
+    <label for="tLink">Link (acquisto, scheda prodotto…)</label>
+    <input type="url" id="tLink" maxlength="1000" placeholder="https://" inputmode="url">
+    <label for="tNote">Note e informazioni</label>
+    <textarea id="tNote" maxlength="2000" placeholder="Puoi incollare anche altri link"></textarea>
     <div class="actions">
       <button type="button" class="btn danger" id="tDel">Elimina</button>
       <button type="button" class="btn ghost" id="tCancel">Annulla</button>
@@ -153,9 +192,12 @@ dialog h3 { margin: 0; font-size: 18px; }
 
 <dialog id="whoDlg">
   <form method="dialog" id="whoForm">
-    <h3>Chi sei?</h3>
-    <label for="wName">Il nome che compare accanto alle spunte</label>
+    <h3>Impostazioni</h3>
+    <label for="wName">Il tuo nome (compare accanto alle spunte e nelle assegnazioni)</label>
     <input type="text" id="wName" maxlength="30" required>
+    <label>Notifiche su questo telefono</label>
+    <button type="button" class="btn ghost" id="wPush" style="width:100%"></button>
+    <div class="hint" id="wPushHint"></div>
     <div class="actions">
       <button type="button" class="btn danger" id="wOut">Esci</button>
       <button class="btn" value="save">Salva</button>
@@ -173,7 +215,7 @@ const CFG = {
 };
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const LS = { key: 'rist.key', name: 'rist.name', tab: 'rist.tab', cache: 'rist.cache' };
+const LS = { key: 'rist.key', name: 'rist.name', tab: 'rist.tab', cache: 'rist.cache', zone: 'rist.zone', mine: 'rist.mine', pushAsk: 'rist.pushAsk' };
 const ls = {
   get(k) { try { return localStorage.getItem(k); } catch { return null; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch {} },
@@ -185,15 +227,19 @@ const FREQS = [
   { id: 'daily', tab: 'Oggi', label: 'Ogni giorno' },
   { id: 'weekly', tab: 'Settimana', label: 'Ogni settimana' },
   { id: 'monthly', tab: 'Mese', label: 'Ogni mese' },
-  { id: 'info', tab: '⚠️ Regole', label: 'Regola / nota' },
+  { id: 'info', tab: '📌 Info', label: 'Info / regola' },
 ];
+const ZONES = ['Cucina', 'Sala', 'Esterno'];
 const DAY_START_H = 4; // la "giornata" finisce alle 4 di notte: le chiusure dopo mezzanotte contano per il giorno prima
 
 let key = ls.get(LS.key);
 let me = ls.get(LS.name) || '';
 let tab = ls.get(LS.tab) || 'once';
-let state = { tasks: [], log: [] };
-let busy = 0, editing = null, formFreq = 'once';
+let zoneF = ls.get(LS.zone) || '';
+let mineF = ls.get(LS.mine) === '1';
+let state = { tasks: [], log: [], people: [] };
+let busy = 0, editing = null, formFreq = 'once', legacyDb = false, pushSub = null, swReg = null;
+const same = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 
 /* ---------- backend ---------- */
 async function rpc(fn, args = {}) {
@@ -206,6 +252,7 @@ async function rpc(fn, args = {}) {
     const e = await r.json().catch(() => ({}));
     const err = new Error(e.message || `Errore ${r.status}`);
     err.auth = e.code === '28P01';
+    err.missing = e.code === 'PGRST202' || r.status === 404;
     throw err;
   }
   return r.json();
@@ -222,8 +269,9 @@ async function deriveKey(password) {
 function setOnline(ok) { $('sync').classList.toggle('off', !ok); $('sync').title = ok ? 'Sincronizzato' : 'Non in linea'; }
 
 function apply(s) {
-  state = s;
-  ls.set(LS.cache, JSON.stringify(s));
+  state = { people: [], ...s };
+  legacyDb = !('people' in s);
+  ls.set(LS.cache, JSON.stringify(state));
   setOnline(true);
   render();
 }
@@ -236,15 +284,26 @@ async function call(fn, args) {
   } catch (e) {
     if (e.auth) { logout('La password è cambiata o non è più valida.'); return false; }
     setOnline(false);
-    toast(navigator.onLine ? e.message : 'Sei offline: modifica non salvata');
+    toast(!navigator.onLine ? 'Sei offline: modifica non salvata' : e.missing ? 'Il database va aggiornato per usare questa funzione' : e.message);
     return false;
   } finally { busy--; }
 }
 
-async function refresh() {
+// Si presenta al server: registra il nome (per le assegnazioni) e l'eventuale iscrizione push.
+async function hello() {
+  const sub = pushSub ? pushSub.toJSON() : null;
+  try {
+    return await rpc('rist_hello', { p_key: key, p_name: me, p_sub: sub && { endpoint: sub.endpoint, p256dh: sub.keys.p256dh, auth: sub.keys.auth } });
+  } catch (e) {
+    if (!e.missing) throw e;
+    return rpc('rist_state', { p_key: key }); // database non ancora aggiornato
+  }
+}
+
+async function refresh(first) {
   if (!key || busy || document.hidden) return;
   try {
-    const s = await rpc('rist_state', { p_key: key });
+    const s = first ? await hello() : await rpc('rist_state', { p_key: key });
     if (!busy) apply(s);
   } catch (e) {
     if (e.auth) logout('La password è cambiata o non è più valida.');
@@ -252,7 +311,7 @@ async function refresh() {
   }
 }
 
-/* ---------- periodi ---------- */
+/* ---------- periodi e date ---------- */
 function periodStart(freq) {
   const d = new Date(Date.now() - DAY_START_H * 3600e3);
   d.setHours(0, 0, 0, 0);
@@ -272,35 +331,71 @@ function when(iso) {
   if (days === 1) return `ieri ${hm}`;
   return d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' }) + ` ${hm}`;
 }
+function todayStr() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function dueLabel(due) {
+  const diff = Math.round((new Date(due + 'T00:00') - new Date(todayStr() + 'T00:00')) / 864e5);
+  if (diff === 0) return { text: 'oggi', late: true };
+  if (diff === 1) return { text: 'domani', late: false };
+  if (diff < 0) return { text: diff === -1 ? 'scaduta ieri' : `scaduta da ${-diff} giorni`, late: true };
+  return { text: new Date(due + 'T00:00').toLocaleDateString('it-IT', { day: 'numeric', month: 'short' }), late: false };
+}
+
+/* ---------- link ---------- */
+function safeUrl(u) { try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x : null; } catch { return null; } }
+function host(u) { return u.hostname.replace(/^www\./, ''); }
+function linkify(text) {
+  let out = '', last = 0;
+  for (const m of String(text).matchAll(/https?:\/\/[^\s<>"]+/g)) {
+    const u = safeUrl(m[0]);
+    out += esc(text.slice(last, m.index));
+    out += u ? `<a href="${esc(u.href)}" target="_blank" rel="noopener noreferrer">${esc(host(u))} ↗</a>` : esc(m[0]);
+    last = m.index + m[0].length;
+  }
+  return (out + esc(text.slice(last))).replace(/\n/g, '<br>');
+}
 
 /* ---------- render ---------- */
+function visible(t) {
+  if (zoneF && !same(t.zone, zoneF)) return false;
+  if (mineF && !same(t.assignee, me)) return false;
+  return true;
+}
+function allZones() {
+  const z = [...ZONES];
+  for (const t of state.tasks) if (t.zone && !z.some((x) => same(x, t.zone))) z.push(t.zone);
+  return z;
+}
+
 function render() {
   $('whoBtn').textContent = '👤 ' + me;
   const counts = {};
-  for (const f of FREQS) {
-    const ts = state.tasks.filter((t) => t.freq === f.id);
-    counts[f.id] = f.id === 'info' ? 0 : ts.filter((t) => !isDone(t)).length;
-  }
+  for (const f of FREQS) counts[f.id] = f.id === 'info' ? 0 : state.tasks.filter((t) => t.freq === f.id && visible(t) && !isDone(t)).length;
   $('tabs').innerHTML = FREQS.map((f) =>
     `<button class="tab ${tab === f.id ? 'on' : ''}" data-tab="${f.id}">${f.tab}${counts[f.id] ? `<small>${counts[f.id]}</small>` : ''}</button>`
   ).join('') + `<button class="tab ${tab === 'log' ? 'on' : ''}" data-tab="log">Storico</button>`;
+  $('filters').hidden = tab === 'log' || legacyDb;
+  $('filters').innerHTML = `<button class="tab ${!zoneF ? 'on' : ''}" data-zone="">Tutte le aree</button>` +
+    allZones().map((z) => `<button class="tab ${same(z, zoneF) ? 'on' : ''}" data-zone="${esc(z)}">${esc(z)}</button>`).join('') +
+    `<button class="tab ${mineF ? 'on' : ''}" data-mine="1" aria-pressed="${mineF}">👤 Solo mie</button>`;
   $('addBtn').hidden = tab === 'log';
-  $('main').innerHTML = tab === 'log' ? renderLog() : renderTasks();
+  $('main').innerHTML = (tab === 'log' ? '' : pushNotice()) + (tab === 'log' ? renderLog() : renderTasks());
 }
 
 function renderTasks() {
-  const ts = state.tasks.filter((t) => t.freq === tab);
-  if (!ts.length) return `<div class="empty">Niente qui.<br>Tocca <b>＋ Aggiungi</b> per creare un'attività.</div>`;
+  const all = state.tasks.filter((t) => t.freq === tab);
+  const ts = all.filter(visible);
+  if (!ts.length) {
+    return `<div class="empty">${all.length ? 'Niente con questi filtri.' : 'Niente qui.'}<br>Tocca <b>＋ Aggiungi</b> per creare ${tab === 'info' ? 'una nota' : "un'attività"}.</div>`;
+  }
+  const groups = [...new Set(ts.map((t) => t.area))];
   if (tab === 'info') {
-    return [...new Set(ts.map((t) => t.area))].map((a) =>
-      `<h2><span>${esc(a)}</span></h2><div class="list">` + ts.filter((t) => t.area === a).map(renderItem).join('') + `</div>`).join('');
+    return groups.map((a) => `<h2><span>${esc(a)}</span></h2><div class="list">` + ts.filter((t) => t.area === a).map(renderItem).join('') + `</div>`).join('');
   }
   const done = ts.filter(isDone).length;
   const pct = Math.round((done / ts.length) * 100);
   const period = { daily: 'di oggi', weekly: 'di questa settimana', monthly: 'di questo mese', once: '' }[tab];
   let html = `<div class="progress"><div class="row"><span>${done === ts.length ? '🎉 Tutto fatto' : `Fatte ${done} su ${ts.length}`} ${period}</span><span>${pct}%</span></div><div class="bar"><i style="width:${pct}%"></i></div></div>`;
-  const areas = [...new Set(ts.map((t) => t.area))];
-  for (const a of areas) {
+  for (const a of groups) {
     const at = ts.filter((t) => t.area === a).sort((x, y) => isDone(x) - isDone(y));
     const left = at.filter((t) => !isDone(t)).length;
     html += `<h2><span>${esc(a)}</span><span>${left ? left + ' da fare' : '✓'}</span></h2><div class="list">` + at.map(renderItem).join('') + `</div>`;
@@ -310,19 +405,25 @@ function renderTasks() {
 }
 
 function renderItem(t) {
-  const d = isDone(t);
-  let meta = '';
-  if (t.note) meta += `<div class="meta">${esc(t.note)}</div>`;
+  const d = isDone(t), info = t.freq === 'info';
+  let meta = '', chips = '';
+  if (t.note) meta += `<div class="meta">${linkify(t.note)}</div>`;
+  if (t.zone) chips += `<span class="chip">📍 ${esc(t.zone)}</span>`;
+  if (t.assignee && !info) chips += `<span class="chip ${same(t.assignee, me) && !d ? 'me' : ''}">👤 ${esc(t.assignee)}</span>`;
+  if (t.due && t.freq === 'once' && !d) { const l = dueLabel(t.due); chips += `<span class="chip ${l.late ? 'late' : ''}">📅 ${l.text}</span>`; }
+  const u = t.link && safeUrl(t.link);
+  if (u) chips += `<a class="chip" href="${esc(u.href)}" target="_blank" rel="noopener noreferrer">🔗 ${esc(host(u))}</a>`;
+  if (chips) meta += `<div class="chips">${chips}</div>`;
   if (d) meta += `<div class="meta by">✓ ${esc(t.done_by)} · ${when(t.done_at)}</div>`;
-  else if (t.done_at && t.freq !== 'once') meta += `<div class="meta">Ultima volta: ${esc(t.done_by)}, ${when(t.done_at)}</div>`;
-  if (t.freq === 'info') return `<div class="item"><span class="warn" aria-hidden="true">⚠️</span>
-    <div class="body"><div class="title">${esc(t.title)}</div>${meta}</div>
-    <button class="edit" data-edit="${t.id}" aria-label="Modifica ${esc(t.title)}">✎</button></div>`;
+  else if (t.done_at && !info && t.freq !== 'once') meta += `<div class="meta">Ultima volta: ${esc(t.done_by)}, ${when(t.done_at)}</div>`;
+  const edit = `<button class="edit" data-edit="${t.id}" aria-label="Modifica ${esc(t.title)}">✎</button>`;
+  if (info) {
+    return `<div class="item"><span class="warn" aria-hidden="true">${same(t.area, 'Da non fare') ? '⚠️' : '📌'}</span>
+    <div class="body"><div class="title">${esc(t.title)}</div>${meta}</div>${edit}</div>`;
+  }
   return `<div class="item ${d ? 'done' : ''}">
     <button class="check" data-check="${t.id}" aria-label="${d ? 'Segna come da fare' : 'Segna come fatta'}: ${esc(t.title)}" aria-pressed="${d}">✓</button>
-    <div class="body" data-check="${t.id}"><div class="title">${esc(t.title)}</div>${meta}</div>
-    <button class="edit" data-edit="${t.id}" aria-label="Modifica ${esc(t.title)}">✎</button>
-  </div>`;
+    <div class="body" data-check="${t.id}"><div class="title">${esc(t.title)}</div>${meta}</div>${edit}</div>`;
 }
 
 function renderLog() {
@@ -347,15 +448,79 @@ function toast(msg) {
   clearTimeout(toastT); toastT = setTimeout(() => el.remove(), 3500);
 }
 
+/* ---------- notifiche push ---------- */
+const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const isIos = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+function b64ToBytes(s) {
+  const b = atob(s.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (s.length % 4)) % 4));
+  return Uint8Array.from(b, (c) => c.charCodeAt(0));
+}
+async function initPush() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    swReg = await navigator.serviceWorker.register('sw.js');
+    if (swReg.pushManager) pushSub = await swReg.pushManager.getSubscription();
+  } catch {}
+}
+function pushState() {
+  if (!state.vapid) return { ok: false, text: 'Non disponibili', hint: 'Il database va aggiornato per attivare le notifiche.' };
+  if (!pushSupported()) {
+    return isIos() && !isStandalone()
+      ? { ok: false, text: 'Non disponibili qui', hint: 'Su iPhone: tocca Condividi → "Aggiungi alla schermata Home", poi apri l\'app dalla nuova icona e attiva le notifiche da lì.' }
+      : { ok: false, text: 'Non disponibili', hint: 'Questo browser non supporta le notifiche.' };
+  }
+  if (Notification.permission === 'denied') return { ok: false, text: 'Bloccate', hint: 'Le hai bloccate: riattivale dalle impostazioni del telefono per questo sito.' };
+  if (pushSub) return { ok: true, on: true, text: '🔔 Attive — tocca per disattivare', hint: 'Ricevi un avviso quando l\'altra spunta qualcosa o ti assegna un\'attività, e il riepilogo del mattino.' };
+  return { ok: true, on: false, text: '🔕 Attiva le notifiche', hint: '' };
+}
+function pushNotice() {
+  const s = pushState();
+  if (ls.get(LS.pushAsk) || (s.ok && s.on)) return '';
+  if (!s.ok && !(isIos() && !isStandalone() && state.vapid)) return '';
+  return `<div class="notice"><span>${s.ok ? '🔔 Vuoi un avviso quando l\'altra spunta qualcosa o ti assegna un\'attività?' : '🔔 Per le notifiche su iPhone: Condividi → "Aggiungi alla schermata Home".'}</span>
+    ${s.ok ? '<button class="btn" id="pushOn">Attiva</button>' : ''}<button class="x" id="pushNo" aria-label="Chiudi">✕</button></div>`;
+}
+async function togglePush() {
+  const s = pushState();
+  if (!s.ok) { toast(s.hint); return; }
+  try {
+    if (s.on) {
+      const endpoint = pushSub.endpoint;
+      await pushSub.unsubscribe(); pushSub = null;
+      rpc('rist_push_off', { p_key: key, p_endpoint: endpoint }).catch(() => {});
+      toast('Notifiche disattivate');
+    } else {
+      if ((await Notification.requestPermission()) !== 'granted') { toast('Permesso non concesso'); return; }
+      const reg = swReg || await navigator.serviceWorker.ready;
+      pushSub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(state.vapid) });
+      apply(await hello());
+      toast('Notifiche attivate');
+    }
+  } catch (e) { toast('Non riesco ad attivare le notifiche: ' + (e.message || e)); }
+  ls.set(LS.pushAsk, '1');
+  drawPushBtn(); render();
+}
+function drawPushBtn() { const s = pushState(); $('wPush').textContent = s.text; $('wPush').disabled = !s.ok; $('wPushHint').textContent = s.hint; }
+
 /* ---------- azioni ---------- */
 $('tabs').addEventListener('click', (e) => {
   const b = e.target.closest('[data-tab]'); if (!b) return;
   tab = b.dataset.tab; ls.set(LS.tab, tab); render(); window.scrollTo(0, 0);
 });
+$('filters').addEventListener('click', (e) => {
+  const z = e.target.closest('[data-zone]'), m = e.target.closest('[data-mine]');
+  if (z) { zoneF = z.dataset.zone; ls.set(LS.zone, zoneF); }
+  if (m) { mineF = !mineF; ls.set(LS.mine, mineF ? '1' : '0'); }
+  if (z || m) render();
+});
 
 $('main').addEventListener('click', (e) => {
+  if (e.target.closest('a')) return; // i link si aprono, non spuntano
+  if (e.target.id === 'pushOn') return togglePush();
+  if (e.target.id === 'pushNo') { ls.set(LS.pushAsk, '1'); return render(); }
   if (e.target.id === 'clearDone') {
-    const ids = state.tasks.filter((t) => t.freq === 'once' && isDone(t)).map((t) => t.id);
+    const ids = state.tasks.filter((t) => t.freq === 'once' && visible(t) && isDone(t)).map((t) => t.id);
     if (confirm(`Eliminare ${ids.length} attività completate?`)) call('rist_delete_tasks', { p_ids: ids });
     return;
   }
@@ -377,19 +542,29 @@ function toggle(id) {
 
 function openTask(t) {
   editing = t || null;
-  $('tTitleH').textContent = t ? 'Modifica attività' : 'Nuova attività';
+  $('tTitleH').textContent = t ? 'Modifica' : 'Nuova attività';
   $('tTitle').value = t?.title || '';
   $('tArea').value = t?.area || '';
+  $('tZone').value = t?.zone ?? (t ? '' : zoneF);
   $('tNote').value = t?.note || '';
+  $('tLink').value = t?.link || '';
+  $('tDue').value = t?.due || '';
   formFreq = t?.freq || (tab === 'log' ? 'once' : tab);
   $('tDel').hidden = !t;
   $('areas').innerHTML = [...new Set(state.tasks.map((x) => x.area))].map((a) => `<option value="${esc(a)}">`).join('');
+  $('zones').innerHTML = allZones().map((a) => `<option value="${esc(a)}">`).join('');
+  const people = [me, ...(state.people || [])];
+  if (t?.assignee) people.push(t.assignee);
+  const uniq = people.filter((p, i) => p && people.findIndex((q) => same(p, q)) === i);
+  $('tAssignee').innerHTML = `<option value="">Nessuno</option>` + uniq.map((p) => `<option value="${esc(p)}" ${same(p, t?.assignee) ? 'selected' : ''}>${esc(p)}${same(p, me) ? ' (io)' : ''}</option>`).join('');
   drawFreq();
   $('taskDlg').showModal();
   if (!t) $('tTitle').focus();
 }
 function drawFreq() {
   $('tFreq').innerHTML = FREQS.map((f) => `<button type="button" class="${formFreq === f.id ? 'on' : ''}" data-f="${f.id}" aria-pressed="${formFreq === f.id}">${f.label}</button>`).join('');
+  $('tWhoWhen').hidden = formFreq === 'info' || legacyDb;
+  $('tDueBox').style.visibility = formFreq === 'once' ? '' : 'hidden';
 }
 $('tFreq').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (b) { formFreq = b.dataset.f; drawFreq(); } });
 $('tCancel').addEventListener('click', () => $('taskDlg').close());
@@ -398,8 +573,18 @@ $('taskForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const title = $('tTitle').value.trim(), area = $('tArea').value.trim();
   if (!title || !area) return;
+  const link = $('tLink').value.trim();
+  if (link && !safeUrl(link)) { toast('Il link deve iniziare con https://'); return; }
+  const task = {
+    id: editing?.id ?? null, title, area, freq: formFreq, note: $('tNote').value.trim(), link,
+    zone: $('tZone').value.trim(),
+    assignee: formFreq === 'info' ? '' : $('tAssignee').value,
+    due: formFreq === 'once' ? ($('tDue').value || null) : null,
+  };
   $('tSave').disabled = true;
-  const ok = await call('rist_save_task', { p_id: editing?.id ?? null, p_title: title, p_area: area, p_freq: formFreq, p_note: $('tNote').value.trim() });
+  const ok = legacyDb
+    ? await call('rist_save_task', { p_id: task.id, p_title: title, p_area: area, p_freq: formFreq, p_note: [task.note, link].filter(Boolean).join('\n').slice(0, 500) })
+    : await call('rist_save', { p_by: me, p_task: task });
   $('tSave').disabled = false;
   if (ok) { $('taskDlg').close(); if (tab !== 'log' && tab !== formFreq) { tab = formFreq; ls.set(LS.tab, tab); render(); } }
 });
@@ -408,9 +593,11 @@ $('tDel').addEventListener('click', async () => {
   if (await call('rist_delete_tasks', { p_ids: [editing.id] })) $('taskDlg').close();
 });
 
-$('whoBtn').addEventListener('click', () => { $('wName').value = me; $('whoDlg').showModal(); });
+$('whoBtn').addEventListener('click', () => { $('wName').value = me; drawPushBtn(); $('whoDlg').showModal(); });
+$('wPush').addEventListener('click', togglePush);
 $('whoForm').addEventListener('submit', () => {
-  const n = $('wName').value.trim(); if (n) { me = n; ls.set(LS.name, me); render(); }
+  const n = $('wName').value.trim();
+  if (n && n !== me) { me = n; ls.set(LS.name, me); render(); hello().then(apply).catch(() => {}); }
 });
 $('wOut').addEventListener('click', () => { if (confirm('Uscire? Servirà di nuovo la password.')) { $('whoDlg').close(); logout(''); } });
 
@@ -443,8 +630,9 @@ $('gateForm').addEventListener('submit', async (e) => {
   $('gBtn').disabled = true; $('gErr').textContent = '';
   try {
     const k = await deriveKey(pass);
-    const s = await rpc(setupMode ? 'rist_setup' : 'rist_state', { p_key: k });
+    let s = await rpc(setupMode ? 'rist_setup' : 'rist_state', { p_key: k });
     key = k; me = name; ls.set(LS.key, k); ls.set(LS.name, name);
+    try { s = await hello(); } catch {}
     enter(); apply(s);
   } catch (err) {
     $('gErr').textContent = err.auth ? 'Password errata.' : (err.message || 'Errore di rete. Riprova.');
@@ -454,15 +642,16 @@ $('gateForm').addEventListener('submit', async (e) => {
 
 function enter() { $('gate').hidden = true; $('app').hidden = false; }
 
-function start() {
+async function start() {
+  await initPush();
   if (!key || !me) return showGate('');
-  try { state = JSON.parse(ls.get(LS.cache)) || state; } catch {}
-  enter(); render(); refresh();
+  try { state = { people: [], ...(JSON.parse(ls.get(LS.cache)) || state) }; legacyDb = false; } catch {}
+  enter(); render(); refresh(true);
 }
-setInterval(refresh, 12000);
+setInterval(() => refresh(false), 12000);
 setInterval(() => { if (!document.hidden && !busy && !document.querySelector('dialog[open]')) render(); }, 60000); // azzera le spunte al cambio giorno
-document.addEventListener('visibilitychange', refresh);
-window.addEventListener('online', refresh);
+document.addEventListener('visibilitychange', () => refresh(false));
+window.addEventListener('online', () => refresh(false));
 window.addEventListener('offline', () => setOnline(false));
 start();
 </script>
