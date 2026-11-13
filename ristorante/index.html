@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#b4532a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ristorante">
+<title>Ristorante · cose da fare</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
+<style>
+:root {
+  --bg: #faf6f1; --card: #fff; --ink: #2b2420; --muted: #8a7d74; --line: #eadfd5;
+  --accent: #b4532a; --accent-ink: #fff; --ok: #3d8b5a; --ok-bg: #e9f4ec; --danger: #b3372f;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #1b1715; --card: #26201d; --ink: #f1e9e2; --muted: #a2948a; --line: #3a312c;
+    --accent: #e0835a; --accent-ink: #1b1715; --ok: #6cc08b; --ok-bg: #23352a; --danger: #ef7d74; }
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+[hidden] { display: none !important; }
+.wrap { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+
+header { position: sticky; top: 0; z-index: 5; background: var(--bg); padding-top: env(safe-area-inset-top); border-bottom: 1px solid var(--line); }
+.top { display: flex; align-items: center; gap: 10px; padding: 12px 0 8px; }
+.top h1 { font-size: 20px; margin: 0; flex: 1; }
+.who { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 12px; font-size: 14px; }
+.sync { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); flex: none; }
+.sync.off { background: var(--danger); }
+.tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 7px 13px; font-size: 14px; white-space: nowrap; }
+.tab.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.tab small { opacity: .8; margin-left: 4px; }
+
+.progress { margin: 14px 0 4px; }
+.progress .row { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+.bar { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--ok); border-radius: 99px; transition: width .25s; }
+
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 20px 0 8px; display: flex; justify-content: space-between; }
+.list { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.item { display: flex; align-items: center; gap: 12px; padding: 12px 10px 12px 14px; border-top: 1px solid var(--line); }
+.item:first-child { border-top: 0; }
+.check { flex: none; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--muted); background: none; display: grid; place-items: center; padding: 0; color: transparent; font-size: 16px; font-weight: 700; }
+.item.done .check { background: var(--ok); border-color: var(--ok); color: #fff; }
+.body { flex: 1; min-width: 0; }
+.title { overflow-wrap: anywhere; }
+.item.done .title { color: var(--muted); text-decoration: line-through; }
+.meta { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.item.done .meta.by { color: var(--ok); }
+.edit { flex: none; border: 0; background: none; color: var(--muted); padding: 8px; font-size: 18px; line-height: 1; }
+.empty { text-align: center; color: var(--muted); padding: 40px 10px; }
+.linkbtn { border: 0; background: none; color: var(--accent); padding: 0; font-size: 13px; text-transform: none; letter-spacing: 0; }
+
+.fab { position: fixed; right: max(16px, calc(50% - 304px)); bottom: calc(20px + env(safe-area-inset-bottom)); z-index: 6;
+  background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 999px; padding: 14px 20px; font-weight: 600; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+
+.btn { border: 0; border-radius: 12px; padding: 12px 16px; background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn.ghost { background: none; color: var(--ink); border: 1px solid var(--line); font-weight: 400; }
+.btn.danger { background: none; color: var(--danger); border: 1px solid var(--line); font-weight: 400; }
+.btn:disabled { opacity: .5; }
+label { display: block; font-size: 13px; color: var(--muted); margin: 14px 0 5px; }
+input[type=text], input[type=password], select, textarea { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); }
+textarea { resize: vertical; min-height: 64px; }
+.seg { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 6px; }
+.warn { flex: none; width: 28px; text-align: center; }
+.seg button { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 10px 2px; font-size: 14px; }
+.seg button.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+
+.gate { min-height: 100dvh; display: grid; place-items: center; padding: 24px; }
+.gate form { width: 100%; max-width: 360px; text-align: center; }
+.gate .logo { font-size: 56px; }
+.gate h1 { margin: 6px 0 4px; font-size: 24px; }
+.gate p { color: var(--muted); margin: 0 0 8px; font-size: 15px; }
+.gate label, .gate input { text-align: left; }
+.gate .btn { width: 100%; margin-top: 18px; }
+.err { color: var(--danger); font-size: 14px; min-height: 20px; margin-top: 10px; }
+
+dialog { border: 0; padding: 0; background: var(--card); color: var(--ink); width: 100%; max-width: 640px; margin: auto auto 0; border-radius: 18px 18px 0 0; max-height: 92dvh; }
+dialog::backdrop { background: rgba(0,0,0,.45); }
+dialog form { padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); }
+dialog h3 { margin: 0; font-size: 18px; }
+.actions { display: flex; gap: 8px; margin-top: 20px; }
+.actions .btn { flex: 1; }
+.actions .btn.danger { flex: none; }
+@media (min-width: 680px) { dialog { margin: auto; border-radius: 18px; } }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(84px + env(safe-area-inset-bottom)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 14px; z-index: 20; max-width: 90vw; }
+</style>
+</head>
+<body>
+
+<!-- Accesso -->
+<div class="gate" id="gate" hidden>
+  <form id="gateForm" autocomplete="off">
+    <div class="logo">🍽️</div>
+    <h1>Ristorante</h1>
+    <p id="gMsg">Inserisci la password per entrare.</p>
+    <label for="gName">Il tuo nome</label>
+    <input type="text" id="gName" maxlength="30" required placeholder="es. Elisa">
+    <label for="gPass" id="gPassLbl">Password</label>
+    <input type="password" id="gPass" required minlength="6" autocomplete="current-password">
+    <div id="gPass2Box" hidden>
+      <label for="gPass2">Ripeti la password</label>
+      <input type="password" id="gPass2" minlength="6" autocomplete="new-password">
+    </div>
+    <button class="btn" id="gBtn">Entra</button>
+    <div class="err" id="gErr" role="alert"></div>
+  </form>
+</div>
+
+<!-- App -->
+<div id="app" hidden>
+  <header>
+    <div class="wrap">
+      <div class="top">
+        <span class="sync" id="sync" title="Sincronizzato"></span>
+        <h1>Ristorante</h1>
+        <button class="who" id="whoBtn"></button>
+      </div>
+      <nav class="tabs" id="tabs"></nav>
+    </div>
+  </header>
+  <main class="wrap" id="main"></main>
+  <button class="fab" id="addBtn">＋ Aggiungi</button>
+</div>
+
+<dialog id="taskDlg">
+  <form id="taskForm" method="dialog">
+    <h3 id="tTitleH">Nuova attività</h3>
+    <label for="tTitle">Cosa c'è da fare</label>
+    <input type="text" id="tTitle" maxlength="200" required>
+    <label for="tArea">Zona</label>
+    <input type="text" id="tArea" maxlength="40" list="areas" required>
+    <datalist id="areas"></datalist>
+    <label>Tipo</label>
+    <div class="seg" id="tFreq"></div>
+    <label for="tNote">Nota (facoltativa)</label>
+    <textarea id="tNote" maxlength="500"></textarea>
+    <div class="actions">
+      <button type="button" class="btn danger" id="tDel">Elimina</button>
+      <button type="button" class="btn ghost" id="tCancel">Annulla</button>
+      <button class="btn" id="tSave" value="save">Salva</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="whoDlg">
+  <form method="dialog" id="whoForm">
+    <h3>Chi sei?</h3>
+    <label for="wName">Il nome che compare accanto alle spunte</label>
+    <input type="text" id="wName" maxlength="30" required>
+    <div class="actions">
+      <button type="button" class="btn danger" id="wOut">Esci</button>
+      <button class="btn" value="save">Salva</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+'use strict';
+// Credenziali pubbliche del progetto Supabase. La chiave publishable può stare nel codice:
+// i dati sono raggiungibili solo tramite le funzioni rist_* che richiedono la password condivisa.
+const CFG = {
+  url: 'https://pxaghsyxvyvyzipthmaq.supabase.co',
+  key: 'sb_publishable_y-B0_hcLbwg8c9gp25zBbQ_pP8K-taq',
+};
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const LS = { key: 'rist.key', name: 'rist.name', tab: 'rist.tab', cache: 'rist.cache' };
+const ls = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+
+const FREQS = [
+  { id: 'once', tab: 'Da fare', label: 'Una volta' },
+  { id: 'daily', tab: 'Oggi', label: 'Ogni giorno' },
+  { id: 'weekly', tab: 'Settimana', label: 'Ogni settimana' },
+  { id: 'monthly', tab: 'Mese', label: 'Ogni mese' },
+  { id: 'info', tab: '⚠️ Regole', label: 'Regola / nota' },
+];
+const DAY_START_H = 4; // la "giornata" finisce alle 4 di notte: le chiusure dopo mezzanotte contano per il giorno prima
+
+let key = ls.get(LS.key);
+let me = ls.get(LS.name) || '';
+let tab = ls.get(LS.tab) || 'once';
+let state = { tasks: [], log: [] };
+let busy = 0, editing = null, formFreq = 'once';
+
+/* ---------- backend ---------- */
+async function rpc(fn, args = {}) {
+  const r = await fetch(`${CFG.url}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: { apikey: CFG.key, 'Content-Type': 'application/json' },
+    body: JSON.stringify(args),
+  });
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    const err = new Error(e.message || `Errore ${r.status}`);
+    err.auth = e.code === '28P01';
+    throw err;
+  }
+  return r.json();
+}
+
+async function deriveKey(password) {
+  const enc = new TextEncoder();
+  const base = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode('ristorante:' + CFG.url), iterations: 200000 }, base, 256);
+  return [...new Uint8Array(bits)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+function setOnline(ok) { $('sync').classList.toggle('off', !ok); $('sync').title = ok ? 'Sincronizzato' : 'Non in linea'; }
+
+function apply(s) {
+  state = s;
+  ls.set(LS.cache, JSON.stringify(s));
+  setOnline(true);
+  render();
+}
+
+async function call(fn, args) {
+  busy++;
+  try {
+    apply(await rpc(fn, { p_key: key, ...args }));
+    return true;
+  } catch (e) {
+    if (e.auth) { logout('La password è cambiata o non è più valida.'); return false; }
+    setOnline(false);
+    toast(navigator.onLine ? e.message : 'Sei offline: modifica non salvata');
+    return false;
+  } finally { busy--; }
+}
+
+async function refresh() {
+  if (!key || busy || document.hidden) return;
+  try {
+    const s = await rpc('rist_state', { p_key: key });
+    if (!busy) apply(s);
+  } catch (e) {
+    if (e.auth) logout('La password è cambiata o non è più valida.');
+    else setOnline(false);
+  }
+}
+
+/* ---------- periodi ---------- */
+function periodStart(freq) {
+  const d = new Date(Date.now() - DAY_START_H * 3600e3);
+  d.setHours(0, 0, 0, 0);
+  if (freq === 'weekly') d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // lunedì
+  if (freq === 'monthly') d.setDate(1);
+  return d.getTime() + DAY_START_H * 3600e3;
+}
+function isDone(t) {
+  if (!t.done_at || t.freq === 'info') return false;
+  return t.freq === 'once' || new Date(t.done_at).getTime() >= periodStart(t.freq);
+}
+function when(iso) {
+  const d = new Date(iso), now = new Date();
+  const hm = d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  const days = Math.round((new Date(now).setHours(0, 0, 0, 0) - new Date(d).setHours(0, 0, 0, 0)) / 864e5);
+  if (days === 0) return `oggi ${hm}`;
+  if (days === 1) return `ieri ${hm}`;
+  return d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' }) + ` ${hm}`;
+}
+
+/* ---------- render ---------- */
+function render() {
+  $('whoBtn').textContent = '👤 ' + me;
+  const counts = {};
+  for (const f of FREQS) {
+    const ts = state.tasks.filter((t) => t.freq === f.id);
+    counts[f.id] = f.id === 'info' ? 0 : ts.filter((t) => !isDone(t)).length;
+  }
+  $('tabs').innerHTML = FREQS.map((f) =>
+    `<button class="tab ${tab === f.id ? 'on' : ''}" data-tab="${f.id}">${f.tab}${counts[f.id] ? `<small>${counts[f.id]}</small>` : ''}</button>`
+  ).join('') + `<button class="tab ${tab === 'log' ? 'on' : ''}" data-tab="log">Storico</button>`;
+  $('addBtn').hidden = tab === 'log';
+  $('main').innerHTML = tab === 'log' ? renderLog() : renderTasks();
+}
+
+function renderTasks() {
+  const ts = state.tasks.filter((t) => t.freq === tab);
+  if (!ts.length) return `<div class="empty">Niente qui.<br>Tocca <b>＋ Aggiungi</b> per creare un'attività.</div>`;
+  if (tab === 'info') {
+    return [...new Set(ts.map((t) => t.area))].map((a) =>
+      `<h2><span>${esc(a)}</span></h2><div class="list">` + ts.filter((t) => t.area === a).map(renderItem).join('') + `</div>`).join('');
+  }
+  const done = ts.filter(isDone).length;
+  const pct = Math.round((done / ts.length) * 100);
+  const period = { daily: 'di oggi', weekly: 'di questa settimana', monthly: 'di questo mese', once: '' }[tab];
+  let html = `<div class="progress"><div class="row"><span>${done === ts.length ? '🎉 Tutto fatto' : `Fatte ${done} su ${ts.length}`} ${period}</span><span>${pct}%</span></div><div class="bar"><i style="width:${pct}%"></i></div></div>`;
+  const areas = [...new Set(ts.map((t) => t.area))];
+  for (const a of areas) {
+    const at = ts.filter((t) => t.area === a).sort((x, y) => isDone(x) - isDone(y));
+    const left = at.filter((t) => !isDone(t)).length;
+    html += `<h2><span>${esc(a)}</span><span>${left ? left + ' da fare' : '✓'}</span></h2><div class="list">` + at.map(renderItem).join('') + `</div>`;
+  }
+  if (tab === 'once' && done) html += `<h2><span></span><button class="linkbtn" id="clearDone">Elimina le ${done} completate</button></h2>`;
+  return html;
+}
+
+function renderItem(t) {
+  const d = isDone(t);
+  let meta = '';
+  if (t.note) meta += `<div class="meta">${esc(t.note)}</div>`;
+  if (d) meta += `<div class="meta by">✓ ${esc(t.done_by)} · ${when(t.done_at)}</div>`;
+  else if (t.done_at && t.freq !== 'once') meta += `<div class="meta">Ultima volta: ${esc(t.done_by)}, ${when(t.done_at)}</div>`;
+  if (t.freq === 'info') return `<div class="item"><span class="warn" aria-hidden="true">⚠️</span>
+    <div class="body"><div class="title">${esc(t.title)}</div>${meta}</div>
+    <button class="edit" data-edit="${t.id}" aria-label="Modifica ${esc(t.title)}">✎</button></div>`;
+  return `<div class="item ${d ? 'done' : ''}">
+    <button class="check" data-check="${t.id}" aria-label="${d ? 'Segna come da fare' : 'Segna come fatta'}: ${esc(t.title)}" aria-pressed="${d}">✓</button>
+    <div class="body" data-check="${t.id}"><div class="title">${esc(t.title)}</div>${meta}</div>
+    <button class="edit" data-edit="${t.id}" aria-label="Modifica ${esc(t.title)}">✎</button>
+  </div>`;
+}
+
+function renderLog() {
+  if (!state.log.length) return `<div class="empty">Ancora nessuna attività completata.</div>`;
+  let html = '', lastDay = '';
+  for (const l of state.log) {
+    const day = new Date(new Date(l.done_at).getTime() - DAY_START_H * 3600e3)
+      .toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+    if (day !== lastDay) { html += (lastDay ? '</div>' : '') + `<h2><span>${day}</span></h2><div class="list">`; lastDay = day; }
+    const hm = new Date(l.done_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    html += `<div class="item"><div class="body"><div class="title">${esc(l.title)}</div><div class="meta">${esc(l.area)} · ${esc(l.done_by)} · ${hm}</div></div></div>`;
+  }
+  return html + '</div>';
+}
+
+let toastT;
+function toast(msg) {
+  document.querySelector('.toast')?.remove();
+  const el = document.createElement('div');
+  el.className = 'toast'; el.setAttribute('role', 'status'); el.textContent = msg;
+  document.body.append(el);
+  clearTimeout(toastT); toastT = setTimeout(() => el.remove(), 3500);
+}
+
+/* ---------- azioni ---------- */
+$('tabs').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-tab]'); if (!b) return;
+  tab = b.dataset.tab; ls.set(LS.tab, tab); render(); window.scrollTo(0, 0);
+});
+
+$('main').addEventListener('click', (e) => {
+  if (e.target.id === 'clearDone') {
+    const ids = state.tasks.filter((t) => t.freq === 'once' && isDone(t)).map((t) => t.id);
+    if (confirm(`Eliminare ${ids.length} attività completate?`)) call('rist_delete_tasks', { p_ids: ids });
+    return;
+  }
+  const ed = e.target.closest('[data-edit]');
+  if (ed) return openTask(state.tasks.find((t) => t.id === ed.dataset.edit));
+  const ck = e.target.closest('[data-check]');
+  if (ck) toggle(ck.dataset.check);
+});
+
+function toggle(id) {
+  const t = state.tasks.find((x) => x.id === id); if (!t) return;
+  const done = !isDone(t);
+  const prev = { done_at: t.done_at, done_by: t.done_by };
+  // aggiornamento immediato, poi conferma dal server
+  t.done_at = done ? new Date().toISOString() : null; t.done_by = done ? me : null;
+  render();
+  call('rist_toggle', { p_id: id, p_done: done, p_by: me }).then((ok) => { if (!ok) { Object.assign(t, prev); render(); } });
+}
+
+function openTask(t) {
+  editing = t || null;
+  $('tTitleH').textContent = t ? 'Modifica attività' : 'Nuova attività';
+  $('tTitle').value = t?.title || '';
+  $('tArea').value = t?.area || '';
+  $('tNote').value = t?.note || '';
+  formFreq = t?.freq || (tab === 'log' ? 'once' : tab);
+  $('tDel').hidden = !t;
+  $('areas').innerHTML = [...new Set(state.tasks.map((x) => x.area))].map((a) => `<option value="${esc(a)}">`).join('');
+  drawFreq();
+  $('taskDlg').showModal();
+  if (!t) $('tTitle').focus();
+}
+function drawFreq() {
+  $('tFreq').innerHTML = FREQS.map((f) => `<button type="button" class="${formFreq === f.id ? 'on' : ''}" data-f="${f.id}" aria-pressed="${formFreq === f.id}">${f.label}</button>`).join('');
+}
+$('tFreq').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (b) { formFreq = b.dataset.f; drawFreq(); } });
+$('tCancel').addEventListener('click', () => $('taskDlg').close());
+$('addBtn').addEventListener('click', () => openTask(null));
+$('taskForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const title = $('tTitle').value.trim(), area = $('tArea').value.trim();
+  if (!title || !area) return;
+  $('tSave').disabled = true;
+  const ok = await call('rist_save_task', { p_id: editing?.id ?? null, p_title: title, p_area: area, p_freq: formFreq, p_note: $('tNote').value.trim() });
+  $('tSave').disabled = false;
+  if (ok) { $('taskDlg').close(); if (tab !== 'log' && tab !== formFreq) { tab = formFreq; ls.set(LS.tab, tab); render(); } }
+});
+$('tDel').addEventListener('click', async () => {
+  if (!editing || !confirm(`Eliminare "${editing.title}"?`)) return;
+  if (await call('rist_delete_tasks', { p_ids: [editing.id] })) $('taskDlg').close();
+});
+
+$('whoBtn').addEventListener('click', () => { $('wName').value = me; $('whoDlg').showModal(); });
+$('whoForm').addEventListener('submit', () => {
+  const n = $('wName').value.trim(); if (n) { me = n; ls.set(LS.name, me); render(); }
+});
+$('wOut').addEventListener('click', () => { if (confirm('Uscire? Servirà di nuovo la password.')) { $('whoDlg').close(); logout(''); } });
+
+/* ---------- accesso ---------- */
+let setupMode = false;
+function logout(msg) {
+  key = null; ls.del(LS.key); ls.del(LS.cache);
+  showGate(msg);
+}
+async function showGate(msg) {
+  $('app').hidden = true; $('gate').hidden = false;
+  $('gName').value = me; $('gPass').value = ''; $('gPass2').value = '';
+  $('gErr').textContent = msg || '';
+  try {
+    setupMode = !(await rpc('rist_status')).configured;
+  } catch (e) { setupMode = false; $('gErr').textContent = 'Impossibile contattare il server. Riprova.'; }
+  $('gPass2Box').hidden = !setupMode;
+  $('gPass2').required = setupMode;
+  $('gPassLbl').textContent = setupMode ? 'Scegli una password (min. 6 caratteri)' : 'Password';
+  $('gMsg').textContent = setupMode
+    ? 'Prima apertura: scegli la password da condividere con chi deve entrare.'
+    : 'Inserisci la password per entrare.';
+  $('gBtn').textContent = setupMode ? 'Crea e entra' : 'Entra';
+}
+$('gateForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = $('gName').value.trim(), pass = $('gPass').value;
+  if (!name) return;
+  if (setupMode && pass !== $('gPass2').value) { $('gErr').textContent = 'Le due password non coincidono.'; return; }
+  $('gBtn').disabled = true; $('gErr').textContent = '';
+  try {
+    const k = await deriveKey(pass);
+    const s = await rpc(setupMode ? 'rist_setup' : 'rist_state', { p_key: k });
+    key = k; me = name; ls.set(LS.key, k); ls.set(LS.name, name);
+    enter(); apply(s);
+  } catch (err) {
+    $('gErr').textContent = err.auth ? 'Password errata.' : (err.message || 'Errore di rete. Riprova.');
+    if (err.auth && setupMode) showGate('Qualcuno ha già impostato la password: inseriscila.');
+  } finally { $('gBtn').disabled = false; }
+});
+
+function enter() { $('gate').hidden = true; $('app').hidden = false; }
+
+function start() {
+  if (!key || !me) return showGate('');
+  try { state = JSON.parse(ls.get(LS.cache)) || state; } catch {}
+  enter(); render(); refresh();
+}
+setInterval(refresh, 12000);
+setInterval(() => { if (!document.hidden && !busy && !document.querySelector('dialog[open]')) render(); }, 60000); // azzera le spunte al cambio giorno
+document.addEventListener('visibilitychange', refresh);
+window.addEventListener('online', refresh);
+window.addEventListener('offline', () => setOnline(false));
+start();
+</script>
+</body>
+</html>
